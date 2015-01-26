@@ -31,7 +31,10 @@ if [ -n "$SGE_OPT" ]; then
 else
   cat $SAM2BAM | while read i; do a=(${i//\\t/}); perl ${DIR}/seq2cov.pl -z -b ${a[1]} -N ${a[0]} $BED; done > cov.txt
 fi
-bam2reads.pl $SAM2BAM > read_stats.txt
+perl ${DIR}/bam2reads.pl $SAM2BAM > read_stats.txt
 
 #echo cov2lr.pl -a $CONS read_stats.txt cov.txt lr2gene.pl $OPT 
 perl ${DIR}/cov2lr.pl -a $CONS read_stats.txt cov.txt | perl ${DIR}/lr2gene.pl $OPT $SEQ2COPT > seq2c_results.txt
+
+
+
