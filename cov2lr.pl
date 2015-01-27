@@ -90,7 +90,7 @@ my %factor2;  # Gene/amplicon factor
 while( my ($k, $v) = each %norm1) {
     next if ( $bad{ $k } );
     my @t = values %$v;
-    $factor2{ $k } = $stat->median(\@t) ? $meddepth/$stat->median(\@t) : 0;
+    $factor2{ $k } = $stat->median(\@t) != 0 ? $meddepth/$stat->median(\@t) : 0;
 }
 
 my %samplemedian;
