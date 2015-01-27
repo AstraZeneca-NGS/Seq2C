@@ -24,7 +24,7 @@ if [ -n "$SGE_OPT" ]; then
   while read i; do 
     let COUNTER=COUNTER+1
     a=(${i//\\t/}) 
-    qsub $SGE_OPT -pe smp 1 -cwd -V -N seq2c_sam${COUNTER} -S /bin/bash ${DIR}/seq2cov_wrap.sh ${a[1]} ${a[0]} $BED $COUNTER
+    qsub $SGE_OPT -pe smp 1 -cwd -V -N seq2c_sam${COUNTER} -S /bin/bash ${DIR}/seq2cov_wrap.sh ${a[1]} ${a[0]} $BED $COUNTER ${DIR}/seq2cov.pl
   done < $SAM2BAM
   perl ${DIR}/waitVardict.pl seq2c $COUNTER
   cat cov.txt.* > cov.txt
