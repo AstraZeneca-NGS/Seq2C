@@ -5,8 +5,8 @@ use warnings;
 use Getopt::Std;
 use strict;
 
-our ($opt_h, $opt_b, $opt_s, $opt_c, $opt_S, $opt_E, $opt_n, $opt_e, $opt_g, $opt_x, $opt_z, $opt_N, $opt_a);
-USAGE() unless( getopts( 'hzb:s:e:S:E:n:c:g:x:N:a:' ) );
+our ($opt_h, $opt_b, $opt_s, $opt_c, $opt_S, $opt_E, $opt_n, $opt_e, $opt_g, $opt_x, $opt_z, $opt_N, $opt_a, $opt_m);
+USAGE() unless( getopts( 'hzb:s:e:S:E:n:c:g:x:N:a:m:' ) );
 USAGE() if ( $opt_h );
 
 my $BAM = $opt_b; # the bam file
@@ -24,6 +24,8 @@ my $g_col = $opt_g ? $opt_g - 1 : 12;
 
 my $SPLICE = $opt_x ? $opt_x : 0;
 my %regions;
+
+my $samtools = $opt_m ? $opt_m : "samtools";
 
 while( <> ) {
     next if ( /^track/i );
@@ -61,7 +63,7 @@ while( <> ) {
 }
 
 print join("\t", "Sample", "Gene", "Chr", "Start", "End", "Tag", "Length", "MeanDepth"), "\n";
-my $bamhdr = `samtools view -H $BAM`;
+my $bamhdr = `$samtools view -H $BAM`;
 my $genome = $bamhdr =~ /SN:chr/ ? "hg" : "grch";
 while( my ($gene, $r) = each %regions ) {
     my $exoncov;
@@ -81,7 +83,7 @@ while( my ($gene, $r) = each %regions ) {
 	$gene_length += $END-$START+1;
 	$gene_start = $START if ( $START < $gene_start );
 	$gene_end = $END if ( $END > $gene_end );
-	open(SAM, "samtools view $BAM $tchr:$START-$END |");
+	open(SAM, "$samtools view $BAM $tchr:$START-$END |");
 	$exoncov = 0;
 	while( <SAM> ) {
 	    my @a = split(/\t/);
