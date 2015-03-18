@@ -5,8 +5,8 @@ use warnings;
 use Getopt::Std;
 use strict;
 
-our ($opt_m);
-getopts( 'm:' );
+our($opt_h, $opt_m);
+getopts( 'hm:' );
 my $samtools = $opt_m ? $opt_m : "samtools";
 
 while( <> ) {
