@@ -10,6 +10,12 @@ SEQ2COPT=$4
 
 SGE_OPT=$5 # e.g. "-q ngs.q"
 
+SAMTOOLS_OPT='samtools'
+if [ $6 ]
+    then
+    SAMTOOLS_OPT=$6
+fi
+
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 OPT=""
@@ -24,7 +30,7 @@ if [ -n "$SGE_OPT" ]; then
   while read i; do 
     let COUNTER=COUNTER+1
     a=(${i//\\t/}) 
-    qsub $SGE_OPT -pe smp 1 -cwd -V -N seq2c_sam${COUNTER} -S /bin/bash ${DIR}/seq2cov_wrap.sh ${a[1]} ${a[0]} $BED $COUNTER ${DIR}/seq2cov.pl
+    qsub $SGE_OPT -pe smp 1 -cwd -V -N seq2c_sam${COUNTER} -S /bin/bash ${DIR}/seq2cov_wrap.sh ${a[1]} ${a[0]} $BED $COUNTER ${DIR}/seq2cov.pl $SAMTOOLS_OPT
   done < $SAM2BAM
   perl ${DIR}/waitVardict.pl seq2c $COUNTER
   cat cov.txt.* > cov.txt
