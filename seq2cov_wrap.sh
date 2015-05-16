@@ -16,7 +16,7 @@ fi
 OUTPUT=cov.txt.${N}
 if [ $7 ]
     then
-    OUTPUT=%7
+    OUTPUT=$7
 fi
 
 perl $SEQ2COV -m $SAMTOOLS -z -b $BAM -N $SAMPLE $BED > $OUTPUT
