@@ -19,7 +19,13 @@ if [ $7 ]
     OUTPUT=$7
 fi
 
+DONE_MARKER=seq2c.done.${N}
+if [ $8 ]
+    then
+    DONE_MARKER=$8
+fi
+
 perl $SEQ2COV -m $SAMTOOLS -z -b $BAM -N $SAMPLE $BED > $OUTPUT
-touch seq2c.done.${N}
+touch $DONE_MARKER
 
 set +x
