@@ -101,6 +101,7 @@ foreach my $s (@samples) {
         push( @tmp, $v->{ $s } );
     }
     $samplemedian{ $s } = $stat->median( \@tmp );
+	print STDERR "Median depth for $s is 0\n" unless( $samplemedian{ $s } );
 }
 
 while( my ($k, $v) = each %norm1) {
@@ -108,7 +109,6 @@ while( my ($k, $v) = each %norm1) {
     foreach my $s (@samples) {
 	$norm1b{ $k }->{ $s } = sprintf("%.2f", $v->{$s} * $factor2{ $k }+0.1);
         $norm2{ $k }->{ $s } = sprintf("%.2f", ($meddepth != 0) ? (log(($v->{$s} * $factor2{ $k }+0.1)/$meddepth) / log(2)) : 0);
-	print STDERR "Median depth for $s is 0\n" unless( $samplemedian{ $s } );
         $norm3{ $k }->{ $s } = sprintf("%.2f", ($samplemedian{ $s } != 0) ? (log(($v->{$s} * $factor2{ $k }+0.1)/$samplemedian{ $s }) / log(2)) : 0);
     }
 }
