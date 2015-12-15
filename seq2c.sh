@@ -8,7 +8,7 @@ BED=$2
 CONTROL=$3  # Optional control sample names. For multiple controls, separate them using :
 SEQ2COPT=$4
 
-SGE_OPT=$5 # e.g. "-q ngs.q"
+SGE_OPT=$5 # e.g. "-q batch.q"
 
 SAMTOOLS_OPT='samtools'
 if [ $6 ]
