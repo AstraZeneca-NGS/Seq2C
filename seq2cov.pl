@@ -36,29 +36,29 @@ while( <> ) {
     my @A = split(/\t/);
     if ( $opt_a || (@A == 8 && $A[6] =~ /^\d+$/ && $A[7] =~ /^\d+$/ && $A[6] > $A[1] && $A[7] < $A[2]) ) {
         $opt_a = "10:0.95" unless($opt_a);
-	my ($chr, $start, $end, $gene, $score, $strand, $istart, $iend) = @A;
-	$start++ && $istart++; # if ( $opt_z );
-	push(@{ $regions{ $gene }->{ CDS } }, [$start, $end, $istart, $iend]);
-	$regions{ $gene }->{ chr } = $chr;
+        my ($chr, $start, $end, $gene, $score, $strand, $istart, $iend) = @A;
+        $start++ && $istart++; # if ( $opt_z );
+        push(@{ $regions{ $gene }->{ CDS } }, [$start, $end, $istart, $iend]);
+        $regions{ $gene }->{ chr } = $chr;
     } else {
-	($c_col, $S_col, $E_col, $g_col, $s_col, $e_col) = (0, 1, 2, 3, 1, 2) if ( (! $opt_c) && @A == 4 && $A[1] =~ /^\d+$/ && $A[2] =~ /^\d+$/ && $A[1] <= $A[2] );
-	my ($chr, $cdss, $cdse, $gene) = @A[$c_col,$S_col,$E_col,$g_col];
-	my @starts = split(/,/, $A[$s_col]);
-	my @ends = split(/,/, $A[$e_col]);
-	my @CDS = ();
-	for(my $i = 0; $i < @starts; $i++) {
-	    my ($s, $e) = ($starts[$i], $ends[$i]);
-	    next if ( $cdss > $e ); # not a coding exon
-	    last if ( $cdse < $s ); # No more coding exon
-	    $s = $cdss if ( $s < $cdss );
-	    $e = $cdse if ( $e > $cdse );
-	    $s -= $SPLICE unless ( $s == $cdss );
-	    $e += $SPLICE unless ( $e == $cdse );
-	    $s += 1 if ( $opt_z );
-	    push(@CDS, [$s, $e]);
-	}
-	push( @{ $regions{ $gene }->{ CDS } }, @CDS);
-	$regions{ $gene }->{ chr } = $chr;
+        ($c_col, $S_col, $E_col, $g_col, $s_col, $e_col) = (0, 1, 2, 3, 1, 2) if ( (! $opt_c) && @A == 4 && $A[1] =~ /^\d+$/ && $A[2] =~ /^\d+$/ && $A[1] <= $A[2] );
+        my ($chr, $cdss, $cdse, $gene) = @A[$c_col,$S_col,$E_col,$g_col];
+        my @starts = split(/,/, $A[$s_col]);
+        my @ends = split(/,/, $A[$e_col]);
+        my @CDS = ();
+        for(my $i = 0; $i < @starts; $i++) {
+            my ($s, $e) = ($starts[$i], $ends[$i]);
+            next if ( $cdss > $e ); # not a coding exon
+            last if ( $cdse < $s ); # No more coding exon
+            $s = $cdss if ( $s < $cdss );
+            $e = $cdse if ( $e > $cdse );
+            $s -= $SPLICE unless ( $s == $cdss );
+            $e += $SPLICE unless ( $e == $cdse );
+            $s += 1 if ( $opt_z );
+            push(@CDS, [$s, $e]);
+        }
+        push( @{ $regions{ $gene }->{ CDS } }, @CDS);
+        $regions{ $gene }->{ chr } = $chr;
     }
 }
 
@@ -71,66 +71,66 @@ while( my ($gene, $r) = each %regions ) {
     my $chr = $r->{ chr };
     my $tchr = $chr;
     if ( $genome eq "hg" ) {
-	$tchr = "chr$tchr" unless( $tchr =~ /^chr/ );
+        $tchr = "chr$tchr" unless( $tchr =~ /^chr/ );
     } else {
-	$tchr =~ s/^chr// if( $tchr =~ /^chr/ );
+        $tchr =~ s/^chr// if( $tchr =~ /^chr/ );
     }
     my $total = 0;
     my $gene_length = 0;
     my ($gene_start, $gene_end) = (500000000, 0);
     for(my $i = 0; $i < @{ $CDS }; $i++) {
-	my ($START, $END, $ISTART, $IEND) = @{$CDS->[$i]};
-	$gene_length += $END-$START+1;
-	$gene_start = $START if ( $START < $gene_start );
-	$gene_end = $END if ( $END > $gene_end );
-	open(SAM, "$samtools view $BAM $tchr:$START-$END |");
-	$exoncov = 0;
-	while( <SAM> ) {
-	    my @a = split(/\t/);
-	    next if ( $a[1] & 0x800 && /\tSA:Z:/ ); # ignore supplementary alignments
-	    my $dir = $a[1] & 0x10 ? "-" : "+";
-	    my $start = $a[3];
-	    my @segs = $a[5] =~ /(\d+)[MD]/g;
-	    my $end = $start-1; $end += $_ foreach(@segs);
-	    if ( $opt_a ) {
-	        my ($dis, $ovlp) = split(/:/, $opt_a);
-		($dis, $ovlp) = (10, 0.95) unless($dis && $ovlp);
-		my ($segstart, $segend) = ($start, $end);
-		if ( $a[5] =~ /^(\d+)S/ && $dir eq "+" ) {
-		    my $ts1 = $segstart-$1 > $START ? $segstart-$1 : $START;
-		    my $te1 = $segend < $END ? $segend : $END;
-		    next unless( abs($ts1-$te1)/($segend-$segstart+$1) > $ovlp);
-		} elsif ($a[5] =~ /(\d+)S$/ && $dir eq "-" ) {
-		    my $ts1 = $segstart > $START ? $segstart : $START;
-		    my $te1 = $segend+$1 < $END ? $segend+$1 : $END;
-		    next unless( abs($te1-$ts1)/($segend+$1-$segstart) > $ovlp);
-		} else {
-		    if ($a[6] eq "=" && $a[8]) {
-			($segstart, $segend) = $a[8] > 0 ? ($segstart, $segstart+$a[8]-1) : ($a[7], $a[7]-$a[8]-1);
-		    }
-		    my $ts1 = $segstart > $START ? $segstart : $START;
-		    my $te1 = $segend < $END ? $segend : $END;
-		    next unless( (abs($segstart - $START) <= $dis && abs($segend - $END) <= $dis ) && abs(($ts1-$te1)/($segend-$segstart)) > $ovlp);
-		}
-		$exoncov++;
-		$total++;
-	    } else {
-		my $alignlen = ($END > $end ? $end : $END) - ($START > $start ? $START : $start)+1;
-		$exoncov += $alignlen;
-		$total += $alignlen;
-	    }
-	}
-	close( SAM );
-	if ( $opt_a ) {
-	    print join("\t", $sample, $gene, $chr, $START, $END, "Amplicon", $END-$START+1, $exoncov), "\n";
-	} else {
-	    print join("\t", $sample, $gene, $chr, $START, $END, "Amplicon", $END-$START+1, sprintf("%.2f", $exoncov/($END-$START+1))), "\n";
-	}
+        my ($START, $END, $ISTART, $IEND) = @{$CDS->[$i]};
+        $gene_length += $END-$START+1;
+        $gene_start = $START if ( $START < $gene_start );
+        $gene_end = $END if ( $END > $gene_end );
+        open(SAM, "$samtools view $BAM $tchr:$START-$END |");
+        $exoncov = 0;
+        while( <SAM> ) {
+            my @a = split(/\t/);
+            next if ( $a[1] & 0x800 && /\tSA:Z:/ ); # ignore supplementary alignments
+            my $dir = $a[1] & 0x10 ? "-" : "+";
+            my $start = $a[3];
+            my @segs = $a[5] =~ /(\d+)[MD]/g;
+            my $end = $start-1; $end += $_ foreach(@segs);
+            if ( $opt_a ) {
+                my ($dis, $ovlp) = split(/:/, $opt_a);
+                ($dis, $ovlp) = (10, 0.95) unless($dis && $ovlp);
+                my ($segstart, $segend) = ($start, $end);
+                if ( $a[5] =~ /^(\d+)S/ && $dir eq "+" ) {
+                    my $ts1 = $segstart-$1 > $START ? $segstart-$1 : $START;
+                    my $te1 = $segend < $END ? $segend : $END;
+                    next unless( abs($ts1-$te1)/($segend-$segstart+$1) > $ovlp);
+                } elsif ($a[5] =~ /(\d+)S$/ && $dir eq "-" ) {
+                    my $ts1 = $segstart > $START ? $segstart : $START;
+                    my $te1 = $segend+$1 < $END ? $segend+$1 : $END;
+                    next unless( abs($te1-$ts1)/($segend+$1-$segstart) > $ovlp);
+                } else {
+                    if ($a[6] eq "=" && $a[8]) {
+                        ($segstart, $segend) = $a[8] > 0 ? ($segstart, $segstart+$a[8]-1) : ($a[7], $a[7]-$a[8]-1);
+                    }
+                    my $ts1 = $segstart > $START ? $segstart : $START;
+                    my $te1 = $segend < $END ? $segend : $END;
+                    next unless( (abs($segstart - $START) <= $dis && abs($segend - $END) <= $dis ) && abs(($ts1-$te1)/($segend-$segstart)) > $ovlp);
+                }
+                $exoncov++;
+                $total++;
+            } else {
+                my $alignlen = ($END > $end ? $end : $END) - ($START > $start ? $START : $start)+1;
+                $exoncov += $alignlen;
+                $total += $alignlen;
+            }
+        }
+        close( SAM );
+        if ( $opt_a ) {
+            print join("\t", $sample, $gene, $chr, $START, $END, "Amplicon", $END-$START+1, $exoncov), "\n";
+        } else {
+            print join("\t", $sample, $gene, $chr, $START, $END, "Amplicon", $END-$START+1, sprintf("%.2f", $exoncov/($END-$START+1))), "\n";
+        }
     }
     if ( $opt_a ) {
-	print join("\t", $sample, $gene, $chr, $gene_start, $gene_end, "Whole-Gene", $gene_length, $total), "\n";
+        print join("\t", $sample, $gene, $chr, $gene_start, $gene_end, "Whole-Gene", $gene_length, $total), "\n";
     } else {
-	print join("\t", $sample, $gene, $chr, $gene_start, $gene_end, "Whole-Gene", $gene_length, sprintf("%.2f", $total/$gene_length)), "\n";
+        print join("\t", $sample, $gene, $chr, $gene_start, $gene_end, "Whole-Gene", $gene_length, sprintf("%.2f", $total/$gene_length)), "\n";
     }
 }
 

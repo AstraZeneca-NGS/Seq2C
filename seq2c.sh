@@ -42,5 +42,3 @@ perl ${DIR}/bam2reads.pl $SAM2BAM > read_stats.txt
 #echo cov2lr.pl -a $CONS read_stats.txt cov.txt lr2gene.pl $OPT 
 perl ${DIR}/cov2lr.pl -a $CONS read_stats.txt cov.txt | perl ${DIR}/lr2gene.pl $OPT $SEQ2COPT > seq2c_results.txt
 
-
-
