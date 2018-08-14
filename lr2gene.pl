@@ -82,7 +82,7 @@ foreach my $r (@results) {
     my ($cnt, $pcnt) = $callcnt{ "$g:$bp:$sigseg" } ? ($callcnt{ "$g:$bp:$sigseg" }, sprintf("%.3g", $callcnt{ "$g:$bp:$sigseg" }/(@samples+0))) : ("", "");
     my @tmp = @$r;
     if ( $pcnt && $pcnt > $MAXRATE && $cnt > $MAXCNT ) { # remove frequency breakpoints, likely due to systematic sequencing yields
-        @tmp = (@tmp[0..6], "", "", "", "", $r->[10], "", "", "");
+        @tmp = (@tmp[0..6], "", "", "", "", $r->[11], "", "", "");
     }
     print join("\t", @tmp, $cnt, $pcnt), "\n";
 }
