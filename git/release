@@ -3,18 +3,16 @@
 # Create a "Release"
 
 ver="$1"
-TAG="v$ver"
-BRANCH="release-$ver"
 
 # Parse command line parameter
 if [ -z "$ver" ]
 then
-	echo "Argument version number missing"
-	exit 1
+	ver=`date +"%Y%m%d%H%M%S"`
+	echo "Using version: $ver"
 fi
 
-# Update sub-projects
-git submodule foreach git pull origin master
+TAG="v$ver"
+BRANCH="release-$ver"
 
 # Tag and push tags 
 git tag -a "$TAG" -m "Release $TAG"
