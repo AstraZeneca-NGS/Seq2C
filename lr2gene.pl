@@ -3,6 +3,9 @@
 # Normalize the coverage from targeted sequencing to CNV log2 ratio.  The algorithm assumes the medium 
 # is diploid, thus not suitable for homogeneous samples (e.g. parent-child).
 
+use FindBin;
+use lib "$FindBin::RealBin/libraries/";
+
 use Stat::Basic;
 use Statistics::TTest;
 use Getopt::Std;
