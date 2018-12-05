@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # Parse a list of refseq and check CDS coverage
-
 use warnings;
+
 use Getopt::Std;
 use strict;
 
@@ -85,7 +85,6 @@ while( my ($gene, $r) = each %regions ) {
 	$exoncov = 0;
 	while( <SAM> ) {
 	    my @a = split(/\t/);
-	    next unless( @a >= 10 );
 	    next if ( $a[1] & 0x800 && /\tSA:Z:/ ); # ignore supplementary alignments
 	    my $dir = $a[1] & 0x10 ? "-" : "+";
 	    my $start = $a[3];

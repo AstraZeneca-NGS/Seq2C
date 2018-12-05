@@ -37,7 +37,7 @@ while( <> ) {
 	}
     }
     $samples{ $sample } = 1;
-    #my ($SMINDEL, $SMINAMP, $SMINEXONDEL, $SMINEXONAMP) = ($MINDEL, $MINAMP, $MINEXONDEL, $MINEXONAMP);
+    my ($SMINDEL, $SMINAMP, $SMINEXONDEL, $SMINEXONAMP) = ($MINDEL, $MINAMP, $MINEXONDEL, $MINEXONAMP);
     if ( $purity{ $sample } ) {
     } elsif ( $opt_P ) {
     }
@@ -48,34 +48,19 @@ while( <> ) {
     #}
     my $desc = ($a[8] && $a[8] eq "BP") ? "$a[10] of $a[11]" : "$a[11] of $a[11]";
     if ( $opt_g || $GAIN{ $gene } ) { # Only do whole gene for copy gains
-        if ( $lr >= 0.75 && $lr < $MINAMP ) {
+        if ( $lr >= 0.75 && $lr < $SMINAMP ) {
 	    print join("\t", $sample, "", "copy-number-alteration", $a[1], "NA", "-", "-", "$a[2]:$a[3]", "-", "-", sprintf("%.1f", 2**$lr*2), $desc, $lr, "gain", "-", "-", "-", "-", "-", "-", "-", "Gain"), "\n";
 	    next;
 	}
     }
-    my $type = $lr < $MINDEL ? "Deletion" : "Amplification";
     if ( $a[10] && $a[8] eq "BP" && ($a[10] >= $MINEXON || $a[11] - $a[10] >= $MINEXON) ) {
 	$lr = $a[12];
-	my $seg = $1 if ( $a[14] =~ /^(\S+)\(/ );
-	$seg = "$1-$2" if ( $seg =~ /^(\d+).*,(\d+)$/ );
-	if ( $a[9] eq "Del" ) {
-	    $type = "Deletion";
-	    $desc = "Del seg $seg";
-	} elsif ( $a[9] eq "Dup" ) {
-	    $type = "Duplication";
-	    $desc = "Dup seg $seg";
-	    $lr = $a[13];  # use the difference instead of absolute log2 ratio for duplications
-	}
-        next unless( $lr >= $MINEXONAMP || $lr <= $MINEXONDEL );
-    } else {
-	next unless( $lr >= $MINAMP || $lr <= $MINDEL );
+        next unless( $lr >= $SMINEXONAMP || $lr <= $SMINEXONDEL );
     }
+    next unless( $lr >= $SMINAMP || $lr <= $SMINDEL );
+    my $type = $lr < $SMINDEL ? "Deletion" : "Amplification";
     next if ( $a[15] && $a[15] >= $N );
-    if ( $type eq "Duplication" ) {
-	print join("\t", $sample, "", "rearrangement", $a[1], "likely", "-", "-", "$a[2]:$a[3]", "-", "-", sprintf("%.1f", 2**$lr*2), $desc, $lr, "-", $a[1], $a[1], $desc, "-", "-", "-", "-", "Rearrangement"), "\n";
-    } else {
-	print join("\t", $sample, "", "copy-number-alteration", $a[1], "NA", "-", "-", "$a[2]:$a[3]", "-", "-", sprintf("%.1f", 2**$lr*2), $desc, $lr, $type eq "Deletion" ? "loss" : "amplification", "-", "-", "-", "-", "-", "-", "-", $type), "\n";
-    }
+    print join("\t", $sample, "", "copy-number-alteration", $a[1], "NA", "-", "-", "$a[2]:$a[3]", "-", "-", sprintf("%.1f", 2**$lr*2), $desc, $lr, $type eq "Deletion" ? "loss" : "amplification", "-", "-", "-", "-", "-", "-", "-", $type), "\n";
 }
 
 # Set the tumor purity for each sample
