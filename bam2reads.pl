@@ -1,18 +1,11 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl -w
 #
 
-use warnings;
-use Getopt::Std;
 use strict;
-
-our ($opt_h, $opt_m);
-getopts( 'hm:' );
-my $samtools = $opt_m ? $opt_m : "samtools";
-
 while( <> ) {
     chomp;
     my ($sample, $bam) = split(/\t/);
-    open(SAMH, "$samtools idxstats $bam |" );
+    open(SAMH, "samtools idxstats $bam |" );
     my $cnt = 0;
     while( <SAMH> ) {
         my @a = split(/\t/);

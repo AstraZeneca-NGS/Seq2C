@@ -24,14 +24,14 @@ my @cnt;
 while(<CNT>) {
     chomp;
     next if ( /Undetermined/ );
-    next if ( /Sample/ || /Total/ );
+    next if ( /Sample\t/ || /Total/ );
     my @a = split(/\t/);
     $cnt{$a[0]} = $a[1];
     push(@cnt, $a[1]);
 }
 close(CNT);
 my $stat = new Stat::Basic;
-my $meanreads = $stat->mean(\@cnt);
+my $meanreads = $stat->prctile(\@cnt, 50);
 my %factor; # to adjust sequencing coverage
 while(my ($k, $v) = each %cnt) {
     $factor{ $k } = $meanreads/$v;
@@ -41,6 +41,7 @@ my %norm1; # key: gene value: hash of (key: sample; value: normalized depth by s
 my %norm1b; # key: gene value: hash of (key: sample; value: normalized depth by gene)
 my %norm2; # key: gene value: hash of (key: sample; value: normalized by gene median scaling log2)
 my %norm3; # key: gene value: hash of (key: sample; value: normalized by sample median scaling log2)
+my %norm_c;
 my %samples;
 my @depth;
 my %data;
@@ -48,21 +49,22 @@ my %loc;
 while( <> ) {
     next if ( /Whole-/ );
     next if ( /_CONTROL_/ );
-    next if ( /^Sample/ );
+    next if ( /^Sample\t/ );
     my ($sample, $gene, $chr, $s, $e, $desc, $len, $depth) = split(/\t/);
     next if ( $sample eq "Undetermined" );
+    next unless( $cnt{ $sample } );
     my $k = $opt_a ? join("\t", $gene, $chr, $s, $e, $len) : $gene;
     $loc{ $gene }->{ chr } = $chr;
     $loc{ $gene }->{ start } = $s unless( $loc{ $gene }->{ start } && $loc{ $gene }->{ start } < $s );
     $loc{ $gene }->{ end } = $e unless( $loc{ $gene }->{ end } && $loc{ $gene }->{ end } > $e );
     $loc{ $gene }->{ len } += $len;
     $data{ $k }->{ $sample }->{ len } += $len;
-    $data{ $k }->{ $sample }->{ cov } += $depth;
+    $data{ $k }->{ $sample }->{ cov } += $depth * $len;
 }
 
 while(my($k, $v) = each %data) {
     while( my($sample, $dv) = each %$v ) {
-	$raw{ $k }->{ $sample } = $dv->{cov};
+	$raw{ $k }->{ $sample } = $dv->{cov}/$dv->{len};
 	$norm1{ $k }->{ $sample } = sprintf("%.2f", $raw{ $k }->{ $sample }*$factor{ $sample });
 	$samples{ $sample } = 1;
 	push(@depth, $norm1{ $k }->{ $sample } );
@@ -85,48 +87,71 @@ while(my($k, $v) = each %data) {
     }
 }
 $meddepth = $stat->median(\@gooddepth); # re-adjust median depth using only those from good amplicons/genes
+#$meddepth = $stat->prctile(\@gooddepth, 25); # re-adjust median depth using only those from good amplicons/genes
 
 my %factor2;  # Gene/amplicon factor
 while( my ($k, $v) = each %norm1) {
     next if ( $bad{ $k } );
     my @t = values %$v;
-    $factor2{ $k } = $stat->median(\@t) != 0 ? $meddepth/$stat->median(\@t) : 0;
-}
-
-my %samplemedian;
-foreach my $s (@samples) {
-    my @tmp = ();
-    while( my ($k, $v) = each %norm1 ) {
-	next if ( $bad{ $k } ); # ignore failed genes/amplicons
-        push( @tmp, $v->{ $s } );
-    }
-    $samplemedian{ $s } = $stat->median( \@tmp );
-	print STDERR "Median depth for $s is 0\n" unless( $samplemedian{ $s } );
+    my $smt = $stat->median(\@t);
+    $factor2{ $k } = $smt != 0 ? $meddepth/$smt : 0;
 }
 
 while( my ($k, $v) = each %norm1) {
     next if ( $bad{ $k } );
     foreach my $s (@samples) {
 	$norm1b{ $k }->{ $s } = sprintf("%.2f", $v->{$s} * $factor2{ $k }+0.1);
-        $norm2{ $k }->{ $s } = sprintf("%.2f", ($meddepth != 0) ? (log(($v->{$s} * $factor2{ $k }+0.1)/$meddepth) / log(2)) : 0);
-        $norm3{ $k }->{ $s } = sprintf("%.2f", ($samplemedian{ $s } != 0) ? (log(($v->{$s} * $factor2{ $k }+0.1)/$samplemedian{ $s }) / log(2)) : 0);
+        $norm2{ $k }->{ $s } = sprintf("%.2f", log(($v->{$s} * $factor2{ $k }+0.1)/$meddepth)/log(2));
+        #$norm3{ $k }->{ $s } = sprintf("%.2f", log(($v->{$s} * $factor2{ $k }+0.1)/$samplemedian{ $s })/log(2));
     }
 }
 
-my %g2amp;
+my %samplemedian;
+foreach my $s (@samples) {
+    my @tmp = ();
+    while( my ($k, $v) = each %norm1b ) {
+	next if ( $bad{ $k } ); # ignore failed genes/amplicons
+        push( @tmp, $v->{ $s } );
+    }
+    $samplemedian{ $s } = $stat->median( \@tmp );
+}
+
+while( my ($k, $v) = each %norm1b) {
+    next if ( $bad{ $k } );
+    foreach my $s (@samples) {
+        $norm3{ $k }->{ $s } = sprintf("%.2f", log($v->{$s}/$samplemedian{ $s })/log(2));
+    }
+}
+
+my %factor_c;  # Gene/amplicon factor
+if ( $opt_c ) {
+    while( my ($k, $v) = each %norm1b) {
+        next if ($bad{ $k });
+        while( my ($s, $d) = each %$v ) {
+            my @controls = split(/:/, $opt_c);
+            my @tcntl = map { $norm1b{ $k }->{ $_ } } @controls;
+            my $cntl_ave = $stat->mean( \@tcntl );
+            $norm_c{ $k }->{ $s } = sprintf("%.3f", log($norm1b{ $k }->{ $s }/$cntl_ave)/log(2));
+        }
+    }
+    foreach my $s (@samples) {
+        my @tmp = ();
+        while( my ($k, $v) = each %norm_c ) {
+            next if ( $bad{ $k } ); # ignore failed genes/amplicons
+            push( @tmp, $v->{ $s } );
+        }
+        $factor_c{ $s } = $stat->median( \@tmp );
+    }
+}
+
 while( my ($k, $v) = each %norm2) {
     next if ($bad{ $k });
     while( my ($s, $d) = each %$v ) {
 	my $t = $opt_a ? $k : "$k\t$loc{$k}->{chr}\t$loc{$k}->{start}\t$loc{$k}->{end}\t$data{$k}->{$s}->{len}";
         my $str = join("\t", $s, $t, $raw{ $k }->{ $s }, $norm1{ $k }->{ $s }, $norm1b{ $k }->{ $s }, $d, $norm3{ $k }->{ $s });
 	if ( $opt_c ) {
-	    my @controls = split(/:/, $opt_c);
-	    my @tcntl = map { $norm1b{ $k }->{ $_ } } @controls;
-	    my $cntl_ave = $stat->mean( \@tcntl );
-	    $str .= "\t" .  sprintf("%.3f", log($norm1b{ $k }->{ $s }/$cntl_ave)/log(2));
+	    $str .= "\t" .  sprintf("%.3f", $norm_c{ $k }->{ $s } - $factor_c{ $s });
 	}
-	my @a = split(/\t/, $str);
-	push(@{ $g2amp{ $s }->{ $a[1] } }, \@a);
 	print "$str\n";
     }
 }
