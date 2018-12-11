@@ -9,7 +9,7 @@ while( <> ) {
     my $cnt = 0;
     while( <SAMH> ) {
         my @a = split(/\t/);
-	$cnt += $a[2];
+        $cnt += $a[2]; #calculate total count of mapped reads in BAM
     }
     close( SAMH );
     print "$sample\t$cnt\n";
