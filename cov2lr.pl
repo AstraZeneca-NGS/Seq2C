@@ -4,43 +4,42 @@
 # is diploid, thus not suitable for homogeneous samples (e.g. parent-child).
 
 use Stat::Basic;
-use Statistics::TTest;
 use Getopt::Std;
 use strict;
 
-our ($opt_c, $opt_a, $opt_H, $opt_F, $opt_G, $opt_Y, $opt_M, $opt_y, $opt_Z, $opt_z);
+our ($opt_c, $opt_a, $opt_H, $opt_F, $opt_G, $opt_Y, $opt_M, $opt_y, $opt_Z, $opt_z); #TODO: opt_z is not used, maybe delete it?
 
 getopts( 'HaMyZc:F:G:z:' ) || USAGE();
 $opt_H && USAGE();
 my $FAILEDFACTOR = $opt_F ? $opt_F : 0.2;
 my $YRATIO = $opt_Y ? $opt_Y : 0.15; # for gender testing
 
-if ( $opt_Z ) {
+if ( $opt_Z ) { #create frozen file if -Z
     open( FZ, ">Seq2C.frozen.txt" );
 }
 
-my $CNT = shift;
-my %cnt;
+my $CNT = shift; #file contains sample names and their total count of reads
+my %cnt; # hash of (key: sample name; value: total count)
 open( CNT, $CNT );
-my @cnt;
+my @cnt; #contains total counts of reads for samples
 while(<CNT>) {
     chomp;
     next if ( /Undetermined/ );
     next if ( /Sample/ || /Total/ );
     my @a = split(/\t/);
-    $cnt{$a[0]} = $a[1];
+    $cnt{$a[0]} = $a[1]; #put sample name -> total count
     push(@cnt, $a[1]);
 }
 close(CNT);
 my %gender;
 my @males = ();
 my @females = ();
-if ( $opt_G ) {
+if ( $opt_G ) { #if gender file is set
     open(GEN, $opt_G);
     while( <GEN> ) {
-	my ($s, $g) = split;
-	$gender{ $s } = $g =~ /^m/i ? "M" : ($g =~ /^f/i ? "F" : "U");
-	if ( $gender{ $s } eq "M" ) {
+	my ($s, $g) = split; #fill sample name and gender (F, M or Unknown) from file
+	$gender{ $s } = $g =~ /^m/i ? "M" : ($g =~ /^f/i ? "F" : "U"); #/i - case insensitive matching. put to hash: sample name -> gender
+	if ( $gender{ $s } eq "M" ) { #fill gender maps with sample names
 	    push(@males, $s);
 	} elsif ( $gender{ $s } eq "F" ) {
 	    push(@females, $s);
@@ -53,11 +52,11 @@ my %polygene = ( "GSTM1" => 1, "GSTT1" => 1, GSTT2 => 1, CYP2D6 => 1, OPN1LW => 
 
 my $stat = new Stat::Basic;
 #my $meanreads = $stat->prctile(\@cnt, 50);
-my $meanreads = $stat->median(\@cnt);
+my $meanreads = $stat->median(\@cnt); #calculates median for the total count of reads from sample
 print FZ "MedianReads:\t$meanreads\n" if ( $opt_Z );
-my %factor; # to adjust sequencing coverage
+my %factor; # factor to adjust sequencing coverage. hash of (key: sample name; value: factor)
 while(my ($k, $v) = each %cnt) {
-    $factor{ $k } = $meanreads/$v;
+    $factor{ $k } = $meanreads/$v; #put factor to adjust the count: sample -> factor
     print FZ "SampleMedian:\t$k\t$factor{ $k }\t$v\n";
 }
 my %raw; # key: gene value: hash of (key: sample; value: raw depth)
@@ -65,17 +64,17 @@ my %norm1; # key: gene value: hash of (key: sample; value: normalized depth by s
 my %norm1b; # key: gene value: hash of (key: sample; value: normalized depth by gene)
 my %norm2; # key: gene value: hash of (key: sample; value: normalized by gene median scaling log2)
 my %norm3; # key: gene value: hash of (key: sample; value: normalized by sample median scaling log2)
-my %norm_c;
-my %samples;
-my %data;
-my %loc;
-while( <> ) {
+my %norm_c; # key: gene value: hash of (key: sample; value: normalized by gene median scaling log2 for control sample)
+my %samples; # key: sample value: boolean (used)
+my %data; # (key: gene/gene with chr, start, end, length; value: length, coverage)
+my %loc; # (key: gene/gene with chr, start, end, length; value: chromosome), or (key: gene; value: start, end, length)
+while( <> ) { #parse coverage table (result of seq2cov.pl script)
     chomp;
-    next if ( /Whole-/ );
+    next if ( /Whole-/ ); #skip whole gene and header
     next if ( /_CONTROL_/ );
     next if ( /^Sample/ );
     my ($sample, $gene, $chr, $s, $e, $desc, $len, $depth) = split(/\t/);
-    next if ( $sample eq "Undetermined" );
+    next if ( $sample eq "Undetermined" ); # skip undetermined samples, HLA and polygenes
     next if ( $gene =~ /^HLA-/ );
     next if ( $polygene{ $gene } );
     my $k = $opt_a ? join("\t", $gene, $chr, $s, $e, $len) : $gene;
@@ -87,16 +86,16 @@ while( <> ) {
     $data{ $k }->{ $sample }->{ cov } += $depth;
 }
 
-my @depth;
-my %Adepth; # autosomes
-my %Xdepth; # chrX
-my %Ydepth; # chrY
+my @depth; # raw depth multiply factor for the samples
+my %Adepth; # autosomes; key: sample value: raw depth multiply factor for the sample
+my %Xdepth; # chrX; key: sample value: raw depth multiply factor for the sample
+my %Ydepth; # chrY; key: sample value: raw depth multiply factor for the sample
 while(my($k, $v) = each %data) {
     while( my($sample, $dv) = each %$v ) {
 	$raw{ $k }->{ $sample } = $dv->{cov};
 	$norm1{ $k }->{ $sample } = sprintf("%.2f", $raw{ $k }->{ $sample }*$factor{ $sample });
 	$samples{ $sample } = 1;
-	if ( $loc{$k}->{ chr } =~ /X/ ) {
+	if ( $loc{$k}->{ chr } =~ /X/ ) { # fill X, Y and autosomes hashes by chromosomes
 	    push(@{$Xdepth{ $sample }}, $norm1{ $k }->{ $sample } );
 	} elsif ( $loc{$k}->{ chr } =~ /Y/ ) {
 	    push(@{$Ydepth{ $sample }}, $norm1{ $k }->{ $sample } );
@@ -107,20 +106,20 @@ while(my($k, $v) = each %data) {
     }
 }
 
-my @samples = keys %samples;
+my @samples = keys %samples; # list of used samples
 # Predict gender from the coverage
 if( %Xdepth && %Ydepth && (! $opt_G )) { # only do it if it's not specified and both X and Y have coverages
     open(GENR, ">gender_predicted.txt");
     print GENR join("\t", qw(Sample Gender X_median Y_25 A_median X/A_ratio)), "\n";
     foreach my $s (@samples) {
-        my $xmed = $stat->median($Xdepth{ $s });
+        my $xmed = $stat->median($Xdepth{ $s }); # calculate median of raw depth (with factor) on X and autosomes
         my $amed = $stat->median($Adepth{ $s });
-	print STDERR "$s $xmed $amed\n";
+        print STDERR "$s $xmed $amed\n";
         my $xa = $xmed/$amed;
-        my $y25 = $stat->prctile($Ydepth{ $s }, 25);
-	$gender{ $s } = $y25 < $xmed * $YRATIO ? ($xa >= 0.7 ? "F" : "U") : "M";
-	print GENR "$s\t$gender{ $s }\t$xmed\t$y25\t$amed\t$xa\n";
-	if ( $gender{ $s } eq "M" ) {
+        my $y25 = $stat->prctile($Ydepth{ $s }, 25); #calculate percentile values of raw depth (with factor) on Y
+        $gender{ $s } = $y25 < $xmed * $YRATIO ? ($xa >= 0.7 ? "F" : "U") : "M"; # determine gender
+        print GENR "$s\t$gender{ $s }\t$xmed\t$y25\t$amed\t$xa\n";
+	if ( $gender{ $s } eq "M" ) { #fill gender maps with sample names
 	    push(@males, $s);
 	} elsif ($gender{ $s } eq "F" ) {
 	    push(@females, $s);
@@ -128,21 +127,21 @@ if( %Xdepth && %Ydepth && (! $opt_G )) { # only do it if it's not specified and 
     }
     close(GENR);
 }
-my $meddepth = $stat->median(\@depth);
+my $meddepth = $stat->median(\@depth); #calculates median on raw depths for samples
 @depth = (); # free memory
 %Adepth = ();
 %Xdepth = ();
 %Ydepth = ();
 
 # remove genes/amplicons that failed
-my %bad;
-my @gooddepth = ();
+my %bad; # key: gene/amplicon; value: boolean (used)
+my @gooddepth = (); #goodedian depths for sample
 my $probes = 0; # number of genomic segments
 while(my($k, $v) = each %data) {
     my @tmp = map { $norm1{ $k }->{ $_} } @samples;
-    next if ( $loc{$k}->{chr} =~ /X/ || $loc{$k}->{chr} =~ /Y/ );
+    next if ( $loc{$k}->{chr} =~ /X/ || $loc{$k}->{chr} =~ /Y/ ); #skip X and Y chromosomes
     my $kp80 = $stat->prctile(\@tmp, 80);
-    if ( $kp80 < $meddepth*$FAILEDFACTOR ) {
+    if ( $kp80 < $meddepth*$FAILEDFACTOR ) { #skip failed genes
         $bad{ $k } = 1;
     } else {
         push(@gooddepth, @tmp);
@@ -155,18 +154,20 @@ $meddepth = $stat->median(\@gooddepth); # re-adjust median depth using only thos
 
 my %factor2;  # Gene/amplicon factor
 my %rawmed;  # the raw median of coverage
+#Fill the raw median of coverage and factor for this raw median.
 while( my ($k, $v) = each %norm1) {
     next if ( $bad{ $k } );
     my @t = values %$v;
     if ( $loc{ $k }->{ chr } =~ /X/ ) {
-        @t = map { $gender{ $_ } eq "F" ? $v->{ $_ } : $v->{ $_ } * 2; } @samples;
+        @t = map { $gender{ $_ } eq "F" ? $v->{ $_ } : $v->{ $_ } * 2; } @samples; #adjust coverage for males and unknown on chrX
     } elsif (  $loc{ $k }->{ chr } =~ /Y/ ) {
-        @t = map { $v->{ $_ } * 2; } @males;
+        @t = map { $v->{ $_ } * 2; } @males; #adjust coverage for males and unknown on chrY
     }
     $rawmed{ $k } = $stat->median(\@t);
-    $factor2{ $k } = $rawmed{ $k } ? $meddepth/$rawmed{ $k } : 0;
+    $factor2{ $k } = $rawmed{ $k } > 0 ? $meddepth/$rawmed{ $k } : 0;
 }
 
+#Calculate normalized depth by gene and depth normalized by gene median scaling log2
 while( my ($k, $v) = each %norm1) {
     next if ( $bad{ $k } );
     foreach my $s (@samples) {
@@ -183,8 +184,8 @@ while( my ($k, $v) = each %norm1) {
 	    #print STDERR "Under: $s $k $meddepth + ($v->{$s} - $rawmed{ $k }) $factor2{ $k } $normdp\n";
 	    $normdp = 0.1; 
 	}
-	$norm1b{ $k }->{ $s } = $normdp;
-        $norm2{ $k }->{ $s } = sprintf("%.2f", log($normdp/$meddepth)/log(2));
+	$norm1b{ $k }->{ $s } = $normdp; #normalized depth by gene
+        $norm2{ $k }->{ $s } = sprintf("%.2f", $meddepth > 0 ? log($normdp/$meddepth)/log(2) : 0); # depth normalized by gene median scaling log2
         #$norm3{ $k }->{ $s } = sprintf("%.2f", log(($v->{$s} * $factor2{ $k }+0.1)/$samplemedian{ $s })/log(2));
     }
 }
@@ -196,11 +197,11 @@ foreach my $s (@samples) {
     while( my ($k, $v) = each %norm1b ) {
 	next if ( $bad{ $k } ); # ignore failed genes/amplicons
 	next if ( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ ); # exclude chrX and chrY
-	my $lr = log($v->{ $s }/$meddepth)/log(2); # Would be centered around 0
+	my $lr = $meddepth > 0 ? log($v->{ $s }/$meddepth)/log(2) : 0; # Would be centered around 0
 	next if ( abs($lr) > 1.2 );
 	my $seg = $probes >=1000 ? sprintf("%.2f", $lr) : sprintf("%.1f", $lr); # decrease the resolution if probes are small
-	$mode{ $seg }->{ cnt }++;
-	$mode{ $seg }->{ sum } += $lr;
+	$mode{ $seg }->{ cnt }++; #increase sample count
+	$mode{ $seg }->{ sum } += $lr; #increase median sum
         #push( @tmp, log($v->{ $s }/$meddeth)/log(2) ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ ); # exclude chrX and chrY
     }
     my @tmp = ();
@@ -209,10 +210,10 @@ foreach my $s (@samples) {
     }
     @tmp = sort { $b->[0] <=> $a->[0] } @tmp;
     print STDERR "$s\t@{ $tmp[0] }\t@{ $tmp[1] }\t@{ $tmp[2] }\n" if ( $opt_y );
-    $samplemode{ $s } = $tmp[0]->[2]/$tmp[0]->[0] + log($meddepth)/log(2);
+    $samplemode{ $s } = $tmp[0]->[2]/$tmp[0]->[0] + ($meddepth > 0 ? log($meddepth)/log(2) : 0); #calculate sample median
     #$samplemedian{ $s } = $stat->median( \@tmp );
 }
-
+#Fill the sample median map
 while( my ($k, $v) = each %norm1b) {
     next if ( $bad{ $k } );
     foreach my $s (@samples) {
@@ -221,15 +222,16 @@ while( my ($k, $v) = each %norm1b) {
 }
 
 my %factor_c;  # Gene/amplicon factor
+#Calculate factor and median depth scaling log 2 for control samples
 if ( $opt_c ) {
     my @controls = split(/:/, $opt_c);
     my %controls = map { ($_, 1); } @controls;
     while( my ($k, $v) = each %norm1b) {
         next if ($bad{ $k });
-	my @tcntl = map { $norm1b{ $k }->{ $_ } } @controls;
-	my $cntl_ave = $stat->median( \@tcntl );
+	my @tcntl = map { $norm1b{ $k }->{ $_ } } @controls; #normalized depth by gene for control samples
+	my $cntl_ave = $stat->median( \@tcntl ); #median depth by gene for control samples
         while( my ($s, $d) = each %$v ) {
-            $norm_c{ $k }->{ $s } = sprintf("%.3f", log($d/$cntl_ave)/log(2));
+            $norm_c{ $k }->{ $s } = sprintf("%.3f", $cntl_ave > 0 ? log($d/$cntl_ave)/log(2) : 0); #median depth by gene scaling log 2
         }
     }
 
@@ -245,8 +247,8 @@ if ( $opt_c ) {
 	    next if ( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ ); # exclude chrX and chrY
 	    next if ( abs($v->{$s}) > 1.2 );
 	    my $lr = $probes >= 1000 ? sprintf("%.2f", $v->{$s}) : sprintf("%.1f", $v->{$s}); # decrease the resolution if probes are small
-	    $mode{ $lr }->{ cnt }++;
-	    $mode{ $lr }->{ sum } += $v->{$s};
+	    $mode{ $lr }->{ cnt }++; #increase sample count
+	    $mode{ $lr }->{ sum } += $v->{$s}; #increase median sum
 	}
 	my @tmp = ();
 	while( my ($lr, $v) = each %mode ) {
@@ -256,16 +258,21 @@ if ( $opt_c ) {
         #    push( @tmp, $v->{ $s } ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ );
         #$factor_c{ $s } = $stat->median( \@tmp );
 	print STDERR "Cntrl: $s\t@{ $tmp[0] }\t@{ $tmp[1] }\t@{ $tmp[2] }\n" if ( $opt_y );
-        $factor_c{ $s } = $tmp[0]->[2]/$tmp[0]->[0];
+        $factor_c{ $s } = $tmp[0]->[2]/$tmp[0]->[0]; #calculate control sample factor
     }
 }
 
+#Print result: genes and samples from hash with normalized by gene median scaling log2.
 while( my ($k, $v) = each %norm2) {
     next if ($bad{ $k });
     while( my ($s, $d) = each %$v ) {
+    #If amplicon, $k already contains information about gene and segment. For non-amplicon case create it, because $k is gene.
 	my $t = $opt_a ? $k : "$k\t$loc{$k}->{chr}\t$loc{$k}->{start}\t$loc{$k}->{end}\t$data{$k}->{$s}->{len}";
+	#Output sample, segment data, raw depth, normalized depth by sequencing distribution, normalized depth by gene,
+	#normalized by gene median scaling log2, normalized depth by sample median scaling log2
         my $str = join("\t", $s, $t, $raw{ $k }->{ $s }, $norm1{ $k }->{ $s }, $norm1b{ $k }->{ $s }, $d, $norm3{ $k }->{ $s }); #, $factor2{ $k }, $rawmed{ $k }, $meddepth );
 	if ( $opt_c ) {
+	#For controls add normalized depth by control sample median scaling log2 minus control factor
 	    $str .= "\t" .  sprintf("%.3f", $norm_c{ $k }->{ $s } - $factor_c{ $s });
 	}
 	print "$str\n";
@@ -284,22 +291,22 @@ print <<USAGE;
     Arguments are:
     mapping_reads: Required.  A file containing # of mapped or sequenced reads for samples.  At least two columns.
                    First is the sample name, 2nd is the number of mapped or sequenced reads.
-    coverage.txt:  The coverage output file from checkCov.pl script.  Can also take from standard in or more than
+    coverage.txt:  The coverage output file from seq2cov.pl script.  Can also take from standard in or more than
                    one file.
 
     Options are:
 
-    -a Indicate this is amplicon or exon based calling.  By default, it'll aggregate at gene level.
+    -a Indicate this is amplicon or exon based calling.  By default, it will aggregate at gene level.
 
     -M Indicate to adjust the MAD when transforming the distribution.  Default: no, or just simple linear function.
-       If not sure, don't use this option.  It might have better performance when cohort size is over 30.
+       If not sure, do not use this option.  It might have better performance when cohort size is over 30.
 
     -c sample(s)
        Specify the control sample(s), if aplicable.  Multiple controls are allowed, which are separated by ":"
 
     -F double
        The failed factor for individual amplicons.  If (the 80th percentile of an amplicon depth)/(the global median depth)
-       is less than the argument, the amplicon is considered failed and won't be used in calculation.  Default: 0.2.
+       is less than the argument, the amplicon is considered failed and will not be used in calculation.  Default: 0.2.
     
     -G Gender
        Take a file of gender information.  Two columns, first is sample name, second is either M or F.  If not provided,

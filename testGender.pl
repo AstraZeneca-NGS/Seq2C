@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-
+# Generates gender data file. Can be used in cov2lr.pl with -G option to provide gender data for samples
 use Stat::Basic;
 use Statistics::TTest;
 use Getopt::Std;
@@ -14,13 +14,14 @@ my $COVERAGE = $opt_x ? $opt_x : 10;
 my $READLEN = $opt_L ? $opt_L : 100;
 my $stat = new Stat::Basic;
 my $ttest = new Statistics::TTest;
-my @bedY= ();
+my @bedY= (); #arrays for chrX, chrY and all other regions
 my @bedX= ();
 my @bedA= ();
 my $chrflag = 0;
-my $BEDFile = $opt_B ? $opt_B : ($DIR ? "$DIR/hg19_gender.bed" : "hg19_gender.bed");
+my $BEDFile = $opt_B ? $opt_B : ($DIR ? "$DIR/hg19_gender.bed" : "hg19_gender.bed"); #Bed file contains gender data
 open(BED, $BEDFile);
 my $BEDSIZE = 0;
+#Read bed data
 while( <BED> ) {
     my @a = split;
     $BEDSIZE += $a[2] - $a[1];
@@ -34,7 +35,7 @@ while( <BED> ) {
 }
 close(BED);
 
-my @sam2bam;
+my @sam2bam; #array of sample names and bam paths
 if ( $opt_b ) {
     my $sample = `basename $opt_b .bam`; chomp $sample;
     $opt_n = "($opt_n)" if ( $opt_n && $opt_n !~ /\(/ );
@@ -48,7 +49,8 @@ if ( $opt_b ) {
     }
 }
 
-@sam2bam = sort {$a->[0] cmp $b->[0]} @sam2bam;
+@sam2bam = sort {$a->[0] cmp $b->[0]} @sam2bam; #sort by samples
+#Output results
 print join("\t", qw(Sample Gender chrY_dep chrX_log2 chrA_log2 p_value chrA/X_ratio)), "\n" if ( $opt_h );
 foreach my $r (@sam2bam) {
     my ($sample, $bam) = @$r;
@@ -59,10 +61,10 @@ foreach my $r (@sam2bam) {
     print STDERR "X: ", join(", ", @$depX), "\n" if ( $opt_y );
     my $depA = getcov($bam, \@bedA, 1);
     print STDERR "A: ", join(", ", @$depA), "\n" if ( $opt_y );
-    my $medY = @$depY > 0 ? sprintf("%.3f", $stat->median($depY)) : 0;
+    my $medY = @$depY > 0 ? sprintf("%.3f", $stat->median($depY)) : 0; #median depth of Y chr
     my $gender = $medY > $COVERAGE ? "Male" : "Female";
-    my $medA = sprintf("%.3f", $stat->median( $depA ));
-    my $medX = sprintf("%.3f", $stat->median( $depX ));
+    my $medA = sprintf("%.3f", $stat->median( $depA )); #median depth of autosomes
+    my $medX = sprintf("%.3f", $stat->median( $depX )); #median depth of X chr
     my $p = "NA";
     if ( @$depA >= 3 && @$depX >= 3 ) {
 	$ttest->load_data($depA, $depX);
@@ -78,6 +80,7 @@ foreach my $r (@sam2bam) {
     print join("\t", $sample, $gender, $medY, $medX, $medA, $p, sprintf("%.2f", 2**($medA - $medX))), "\n";
 }
 
+#Calculate coverage for chromosomes (scaling log2 if flag is set)
 sub getcov {
     my ($bam, $bedr, $flag) = @_;
     my @cov = ();
@@ -101,13 +104,14 @@ sub getcov {
     return \@cov;
 }
 
+#Calculate total count of mapped reads
 sub totalRead {
     my $bam = shift;
     open(CNT, "samtools idxstats $bam |");
     my $total = 0;
     while( <CNT> ) {
 	my @a = split;
-        $total += $a[2];
+        $total += $a[2]; #add mapped reads count
 	$chrflag = 1 if ( /^chr/ );
     }
     close( CNT);
@@ -132,9 +136,9 @@ USAGE:
     The output contains 7 columns:
     1. The name of the sample
     2. Predicted gender.  Possible values are:
-       2.1 Male	 It's likely a male
-       2.2 Female	 It's likely a female
-       2.3 X,-Y	 It's likely only one X chr, but without Y chr.
+       2.1 Male	 It is likely a male
+       2.2 Female	 It is likely a female
+       2.3 X,-Y	 It is likely only one X chr, but without Y chr.
        2.4 Unknown	 The information is not enough to determine the gender
     3. ChrY median depth
     4. ChrX median depth
@@ -158,7 +162,7 @@ USAGE:
        The BED file with CDS of chrY specific genes. Default to hg19_gender.bed in seq2c base directory.
 
     -d dir
-       The installed seq2c base directory, if it's not in the path
+       The installed seq2c base directory, if it is not in the path
 
     -x coverage
        The expected depth of coverage.  Specify it unless the depth is > 10x.  Default: 10.
