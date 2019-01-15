@@ -115,7 +115,7 @@ if( %Xdepth && %Ydepth && (! $opt_G )) { # only do it if it's not specified and 
         my $xmed = $stat->median($Xdepth{ $s }); # calculate median of raw depth (with factor) on X and autosomes
         my $amed = $stat->median($Adepth{ $s });
         print STDERR "$s $xmed $amed\n";
-        my $xa = $xmed/$amed;
+        my $xa = $amed > 0 ? $xmed/$amed : 0;
         my $y25 = $stat->prctile($Ydepth{ $s }, 25); #calculate percentile values of raw depth (with factor) on Y
         $gender{ $s } = $y25 < $xmed * $YRATIO ? ($xa >= 0.7 ? "F" : "U") : "M"; # determine gender
         print GENR "$s\t$gender{ $s }\t$xmed\t$y25\t$amed\t$xa\n";
@@ -185,7 +185,7 @@ while( my ($k, $v) = each %norm1) {
 	    $normdp = 0.1; 
 	}
 	$norm1b{ $k }->{ $s } = $normdp; #normalized depth by gene
-        $norm2{ $k }->{ $s } = sprintf("%.2f", $meddepth > 0 ? log($normdp/$meddepth)/log(2) : 0); # depth normalized by gene median scaling log2
+        $norm2{ $k }->{ $s } = sprintf("%.2f", ($normdp > 0 && $meddepth > 0) ? log($normdp/$meddepth)/log(2) : 0); # depth normalized by gene median scaling log2
         #$norm3{ $k }->{ $s } = sprintf("%.2f", log(($v->{$s} * $factor2{ $k }+0.1)/$samplemedian{ $s })/log(2));
     }
 }
@@ -197,7 +197,7 @@ foreach my $s (@samples) {
     while( my ($k, $v) = each %norm1b ) {
 	next if ( $bad{ $k } ); # ignore failed genes/amplicons
 	next if ( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ ); # exclude chrX and chrY
-	my $lr = $meddepth > 0 ? log($v->{ $s }/$meddepth)/log(2) : 0; # Would be centered around 0
+	my $lr = ($v->{ $s } > 0 && $meddepth > 0) ? log($v->{ $s }/$meddepth)/log(2) : 0; # Would be centered around 0
 	next if ( abs($lr) > 1.2 );
 	my $seg = $probes >=1000 ? sprintf("%.2f", $lr) : sprintf("%.1f", $lr); # decrease the resolution if probes are small
 	$mode{ $seg }->{ cnt }++; #increase sample count
@@ -210,14 +210,14 @@ foreach my $s (@samples) {
     }
     @tmp = sort { $b->[0] <=> $a->[0] } @tmp;
     print STDERR "$s\t@{ $tmp[0] }\t@{ $tmp[1] }\t@{ $tmp[2] }\n" if ( $opt_y );
-    $samplemode{ $s } = $tmp[0]->[2]/$tmp[0]->[0] + ($meddepth > 0 ? log($meddepth)/log(2) : 0); #calculate sample median
+    $samplemode{ $s } = ($tmp[0]->[0] > 0 ? $tmp[0]->[2]/$tmp[0]->[0] : 0) + ($meddepth > 0 ? log($meddepth)/log(2) : 0); #calculate sample median
     #$samplemedian{ $s } = $stat->median( \@tmp );
 }
 #Fill the sample median map
 while( my ($k, $v) = each %norm1b) {
     next if ( $bad{ $k } );
     foreach my $s (@samples) {
-        $norm3{ $k }->{ $s } = sprintf("%.2f", log($v->{$s})/log(2) - $samplemode{ $s });
+        $norm3{ $k }->{ $s } = sprintf("%.2f", $v->{$s} > 0 ? log($v->{$s})/log(2) - $samplemode{ $s } : 0);
     }
 }
 
@@ -231,7 +231,7 @@ if ( $opt_c ) {
 	my @tcntl = map { $norm1b{ $k }->{ $_ } } @controls; #normalized depth by gene for control samples
 	my $cntl_ave = $stat->median( \@tcntl ); #median depth by gene for control samples
         while( my ($s, $d) = each %$v ) {
-            $norm_c{ $k }->{ $s } = sprintf("%.3f", $cntl_ave > 0 ? log($d/$cntl_ave)/log(2) : 0); #median depth by gene scaling log 2
+            $norm_c{ $k }->{ $s } = sprintf("%.3f", ($d > 0 && $cntl_ave > 0) ? log($d/$cntl_ave)/log(2) : 0); #median depth by gene scaling log 2
         }
     }
 
@@ -258,7 +258,7 @@ if ( $opt_c ) {
         #    push( @tmp, $v->{ $s } ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ );
         #$factor_c{ $s } = $stat->median( \@tmp );
 	print STDERR "Cntrl: $s\t@{ $tmp[0] }\t@{ $tmp[1] }\t@{ $tmp[2] }\n" if ( $opt_y );
-        $factor_c{ $s } = $tmp[0]->[2]/$tmp[0]->[0]; #calculate control sample factor
+        $factor_c{ $s } = $tmp[0]->[0] > 0 ? $tmp[0]->[2]/$tmp[0]->[0] : 0; #calculate control sample factor
     }
 }
 
