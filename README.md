@@ -15,7 +15,7 @@ To load the project, execute the following command:
 git clone https://github.com/AstraZeneca-NGS/Seq2C.git
 ```
 
-###Add PATH variables for scripts
+### Add PATH variables for scripts
 Add short paths to the scripts seq2cov.pl, cov2lr.pl, lr2gene.pl, bam2reads.pl and others to your OS PATH. 
 In Linux it can be done by adding this line to your `.bashrc` file: 
 
@@ -75,10 +75,10 @@ Output result (`seq2c_results.txt` file) contains columns:
 16. **Ab_Samples** - control samples
 17. **Ab_Samples_Pcnt** - control samples percent
 
-##Command line options for scripts
+## Command line options for scripts
 You can run scripts separately if you want transfer additional command (for example, gender files or tumor purities).
 Parameters for scripts are listed in this chapter.
-###seq2cov.pl
+### seq2cov.pl
 Usage:  
 `seq2cov.pl [-hz] [-n name_reg] [-b bam] [-c chr] [-S start] [-E end] [-s seg_starts] [-e seg_ends] [-x #_nu] [-g gene] [-o ori] [-d depth] region_info`
 
@@ -131,7 +131,7 @@ Usage:
 Arguments are:
 * `sample2bam.txt` file must contains name of sample and paths to bam files with TAB delimiter (`\t`). 
 
-###cov2lr.pl
+### cov2lr.pl
 Usage: 
 `cov2lr.pl [-aH] [-c control] mapping_reads.txt coverage.txt`
 
@@ -165,7 +165,7 @@ Options are:
 -   `-Z`  
     Indicate to output the frozen_file and all parameters into file Seq2C.frozen.txt
 
-###lr2gene.pl
+### lr2gene.pl
 The program will convert a coverage file to copy number profile.  The default parameters are designed for 
 detecting such aberrations for high tumor purity samples, such as cancer cell lines.  
 For clinical samples, many parameters need to be adjusted.  
@@ -224,7 +224,7 @@ For cohort level aberrations:
        
 ## Additional scripts
 Here is the information about scripts that can be used to generate gender files or convert the results of Seq2C.
-###seq2c2fm.pl
+### seq2c2fm.pl
 The program will parse seq2c output and make calls for each gene and output in the format compatible with OncoPrint.
 It has the option to provide the purity so that log2ratio thresholds will be adjusted accordingly.  
 By default, it calls genes that are homozygously deleted or amplified with >= 6 copies.
