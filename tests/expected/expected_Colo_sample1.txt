@@ -1,7 +1,7 @@
 Sample	Gene	Chr	Start	End	Length	Log2ratio	Sig	BP_Whole	Amp_Del	Ab_Seg	Total_Seg	Ab_log2ratio	Log2r_Diff	Ab_Seg_Loc	Ab_Samples	Ab_Samples_Pcnt
-Colo829.chr20.18.Sample1	gene3	chr20	5023110	5026046	2937	-3.32	0	Whole	Del	1	1	-3.32	-3.32	ALL		
-Colo829.chr20.18.Sample1	gene1	chr20	506503	507295	1043	-3.32	0	Whole	Del	4	4	-3.32	-3.32	ALL		
-Colo829.chr20.18.Sample1	gene2	chr20	2802740	2803167	482	-3.32	0	Whole	Del	4	4	-3.32	-3.32	ALL		
-Colo829.chr20.19.Sample1	gene3	chr20	5023110	5026046	2937	-3.32	0	Whole	Del	1	1	-3.32	-3.32	ALL		
-Colo829.chr20.19.Sample1	gene2	chr20	2802740	2803167	482	-3.32	0	Whole	Del	4	4	-3.32	-3.32	ALL		
-Colo829.chr20.19.Sample1	gene1	chr20	506503	507295	1043	-3.32	0	Whole	Del	4	4	-3.32	-3.32	ALL		
+Colo829.chr20.18	gene3	chr20	5023110	5026046	2937	-0.21					1					
+Colo829.chr20.18	gene1	chr20	506503	507295	1043	-0.16					4					
+Colo829.chr20.18	gene2	chr20	2802740	2803167	482	-0.31					4					
+Colo829.chr20.19	gene2	chr20	2802740	2803167	482	0.05					4					
+Colo829.chr20.19	gene3	chr20	5023110	5026046	2937	-0.04					1					
+Colo829.chr20.19	gene1	chr20	506503	507295	1043	-0.085					4					
