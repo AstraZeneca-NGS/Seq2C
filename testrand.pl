@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # Create matrix consists needed number of lines containg 5 random elements in each line. Sum of elements in each line
 # will be the requested.
 use Getopt::Std;
