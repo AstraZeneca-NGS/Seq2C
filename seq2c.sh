@@ -15,7 +15,7 @@ if [ $CONTROL ]
     OPT="-c"
 fi
 echo "Starts seq2cov.pl on $SAM2BAM"
-#cat $SAM2BAM | while read i; do a=(${i//\\t/}); seq2cov.pl -b ${a[1]} -N ${a[0]} $BED; done > cov.txt
+cat $SAM2BAM | while read i; do a=(${i//\\t/}); seq2cov.pl -b ${a[1]} -N ${a[0]} $BED; done > cov.txt
 echo "Starts bam2reads.pl"
 bam2reads.pl $SAM2BAM > read_stats.txt
 

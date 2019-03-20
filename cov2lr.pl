@@ -154,7 +154,7 @@ sub fillDepthsAndSamples() {
 
     #if gender file is not set
     if (!$opt_G) {
-        (%gender, @males) = predictGender(\%Xdepth, \%Ydepth, \%Adepth);
+        (%gender, @males) = predictGender(\%Xdepth, \%Ydepth, \%Adepth, \@samples);
     }
 
     return (\@samples, $meddepth);
@@ -165,8 +165,9 @@ sub predictGender(){
     my $Xdepth = shift;
     my $Ydepth = shift;
     my $Adepth = shift;
+    my $samples = shift;
     # Predict gender from the coverage if gender file isn't set
-    if ($Xdepth && $Ydepth) {
+    if (%$Xdepth && %$Ydepth) {
         # only do it if it's not specified and both X and Y have coverages
         open(GENR, ">gender_predicted.txt");
         print GENR join("\t", qw(Sample Gender X_median Y_25 A_median X/A_ratio)), "\n";
