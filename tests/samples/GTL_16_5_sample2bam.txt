@@ -1,0 +1,7 @@
+GTL_16_5	TEST_CNV_BAMS/bam/Dev_731_GTL_16_5_Pool1-ready.bam
+control1	TEST_CNV_BAMS/bam/Dev_731_NA12878a_Pool1-ready.bam
+control2	TEST_CNV_BAMS/bam/Dev_732_NA12878a_Pool2-ready.bam
+control3	TEST_CNV_BAMS/bam/Dev_733_NA12878a_Pool3-ready.bam
+control4	TEST_CNV_BAMS/bam/Dev_734_NA12878a_Pool4-ready.bam
+control5	TEST_CNV_BAMS/bam/Dev_735_NA12878a_Pool5-ready.bam
+control6	TEST_CNV_BAMS/bam/Dev_736_NA12878a_Pool6-ready.bam

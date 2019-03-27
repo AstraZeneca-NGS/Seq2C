@@ -14,7 +14,6 @@ our ($opt_c, $opt_s, $opt_A, $opt_D, $opt_M, $opt_d, $opt_p, $opt_H, $opt_R, $op
 
 getopts( 'HcyF:s:A:D:d:M:p:R:N:t:P:E:e:' ) || USAGE();
 $opt_H && USAGE();
-
 #For whole gene
 my $AMP = defined($opt_A) ? $opt_A : 1.5;
 my $DEL = defined($opt_D) ? $opt_D : -2.00;
@@ -56,14 +55,16 @@ sub fillLocResults() {
 		chomp;
 		next if ( /^Sample/ ); #skip headers
 		my @a = split(/\t/);
-		my ($sample, $gene, $chr, $s, $e, $desc, $len, $depth) = @a;
+		my ($sample, $gene, $chr, $s, $e, $len, $raw_depth, $norm1, $norm1b, $norm2, $norm3, $norm_c) = @a;
+		my @collapsed_a = ($sample, $gene, $chr, $s, $e, $norm3, $norm_c);
 		$loc{ $gene }->{ chr } = $chr;
 		$loc{ $gene }->{ start } = $s unless( $loc{ $gene }->{ start } && $loc{ $gene }->{ start } < $s );
 		$loc{ $gene }->{ end } = $e unless( $loc{ $gene }->{ end } && $loc{ $gene }->{ end } > $e );
 		$loc{ $gene }->{ len } += $e - $s + 1 unless( $geneloc{ "$gene-$s-$e" } );
 		$geneloc{ "$gene-$s-$e" } = 1;
-		push(@{ $g2amp{ $sample }->{ $gene } }, \@a);
+		push(@{ $g2amp{ $sample }->{ $gene } }, \@collapsed_a);
 	}
+
 	#clean mem
 	%geneloc = ();
 
@@ -73,9 +74,9 @@ sub fillLocResults() {
 
 	while(my ($s, $v) = each %g2amp) {
 		while(my ($g, $vv) = each %$v) {
-			my @segs = sort { $a->[3] <=> $b->[3] } @$vv; # sort by gene length
+			my @segs = sort { $a->[3] <=> $b->[3] } @$vv; # sort by gene start
 			#print STDERR "@segs[0] @segs[1] @segs[2] @segs[3]\n";
-			my @lr = map { $opt_c ? $_->[11] : $_->[10]; } @segs; # if opt_c, take normalized depth median by control sample (log2 ratio)
+			my @lr = map { $opt_c ? $_->[6] : $_->[5]; } @segs; # if opt_c, take normalized depth median by control sample (log2 ratio)
 			my $lr = @lr > 1 ? $stat->median(\@lr) : $lr[0];
 			my ($sig, $bp, $type, $affected, $total, $siglr, $sigseg, $sigdiff) = checkBP(\@segs);
 			$sig = "" if ( $sig == -1 );
@@ -91,7 +92,10 @@ sub fillLocResults() {
 			$callcnt{ "$g:$bp:$sigseg" }++ if ( $sigseg && $bp eq "BP" );
 		}
 	}
+
+	%loc = ();
 	my @samples = keys %g2amp;
+	%g2amp = ();
 	return (\@results, \@samples, \%callcnt);
 }
 
@@ -122,7 +126,7 @@ sub checkBP {
 	return (-1, "", "", "", @$ref+0, "", "", "") if ( @$ref < 4 ); # return empty if there are less than 4 segments for the gene
 
 	#fill with start and normalized depth median skaling log 2 for each segment (if opt_c take the value for sample)
-	my @a = map { $opt_c ? [$_->[3], $_->[11]] : [$_->[3], $_->[10]]; } @$ref;  #
+	my @a = map { $opt_c ? [$_->[3], $_->[6]] : [$_->[3], $_->[5]]; } @$ref;  #
 	my @lr = map { $_->[1]; } @a; #fill with normalized depth median skaling log 2
 	for(my $i = 0; $i < @a; $i++) {
 		$a[$i]->[2] = $i+1; #numerate starts of segments
