@@ -51,7 +51,7 @@ fi
 echo Run GTL_16_5 test with control sample. Starts if previous small tests are ok.
 CONTROLSAMPLE="control1:control2:control3:control4:control5:control6:"
 SAMPLE2BAM="samples/GTL_16_5_sample2bam.txt"
-BED="bed/panel_az600_chr7_cov.bed"
+BED="bed/panel_az600_chr7.bed"
 
 seq2c.sh $SAMPLE2BAM $BED $CONTROLSAMPLE
 ACTUAL_GTL_16_5_CONTROL="seq2c_results_GTL_16_5.txt"

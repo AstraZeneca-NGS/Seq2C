@@ -235,8 +235,7 @@ sub calculateSampleMedian() {
         while (my ($lr, $v) = each %mode) {
             push(@tmp, [ $v->{ cnt }, $lr, $v->{ sum } ]);
         }
-        #TODO: here sort was changed because it produce different results based on what sum will be sort for the cnt (if cnt equals)
-        @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2]} @tmp;
+        @tmp = sort {$b->[0] <=> $a->[0]} @tmp;
         print STDERR "$s\t@{$tmp[0]}\t@{$tmp[1]}\t@{$tmp[2]}\n" if ($opt_y);
         $samplemode{ $s } = ($tmp[0]->[0] > 0 ? $tmp[0]->[2] / $tmp[0]->[0] : 0) + ($meddepth > 0 ? log($meddepth) / log(2) : 0); #calculate sample median
         #$samplemedian{ $s } = $stat->median( \@tmp );
