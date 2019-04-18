@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 # Parse a list of refseq and check CDS coverage
 use warnings;
-
+use FindBin;
+use lib "$FindBin::RealBin/libraries/";
 use Getopt::Std;
 use strict;
 
