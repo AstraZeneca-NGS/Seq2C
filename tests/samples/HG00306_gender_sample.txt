@@ -1,0 +1,1 @@
+HG00306	bam/HG00306.mapped.ILLUMINA.bwa.FIN.exome.20120522.bam
