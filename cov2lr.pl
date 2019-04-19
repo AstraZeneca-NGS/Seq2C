@@ -235,7 +235,8 @@ sub calculateSampleMedian() {
         while (my ($lr, $v) = each %mode) {
             push(@tmp, [ $v->{ cnt }, $lr, $v->{ sum } ]);
         }
-        @tmp = sort {$b->[0] <=> $a->[0]} @tmp;
+        #Sort was changed because it produces different results based on what sum will be sort for the cnt (if cnt equals)
+        @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2]} @tmp;
         print STDERR "$s\t@{$tmp[0]}\t@{$tmp[1]}\t@{$tmp[2]}\n" if ($opt_y);
         $samplemode{ $s } = ($tmp[0]->[0] > 0 ? $tmp[0]->[2] / $tmp[0]->[0] : 0) + ($meddepth > 0 ? log($meddepth) / log(2) : 0); #calculate sample median
         #$samplemedian{ $s } = $stat->median( \@tmp );
@@ -286,7 +287,8 @@ sub calculateFactorAndMedianForControlSample() {
             while (my ($lr, $v) = each %mode) {
                 push(@tmp, [ $v->{ cnt }, $lr, $v->{ sum } ]);
             }
-            @tmp = sort {$b->[0] <=> $a->[0]} @tmp;
+            #Sort was changed because it produces different results based on what sum will be sort for the cnt (if cnt equals)
+            @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2]} @tmp;
             #    push( @tmp, $v->{ $s } ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ );
             #$factor_c{ $s } = $stat->median( \@tmp );
             print STDERR "Cntrl: $s\t@{$tmp[0]}\t@{$tmp[1]}\t@{$tmp[2]}\n" if ($opt_y);
