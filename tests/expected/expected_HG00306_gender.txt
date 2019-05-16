@@ -1,0 +1,2 @@
+Sample	Gender	X_median	Y_25	A_median	X/A_ratio
+HG00306	F	64.14	0	53.42	1.20067390490453
