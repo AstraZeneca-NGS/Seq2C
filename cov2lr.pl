@@ -226,17 +226,15 @@ sub calculateSampleMedian() {
             next if (abs($lr) > 1.2);
             my $seg = $probes >= 1000 ? sprintf("%.2f", $lr) : sprintf("%.1f", $lr); # decrease the resolution if probes are small
             $mode{ $seg }->{ cnt }++;                                                #increase sample count
-            $mode{ $seg }->{ sum } += $lr;
-
-            #increase median sum
+            $mode{ $seg }->{ sum } += $lr;                                           #increase median sum
             #push( @tmp, log($v->{ $s }/$meddeth)/log(2) ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ ); # exclude chrX and chrY
         }
         my @tmp = ();
         while (my ($lr, $v) = each %mode) {
             push(@tmp, [ $v->{ cnt }, $lr, $v->{ sum } ]);
         }
-        #Sort was changed because it produces different results based on what sum will be sort for the cnt (if cnt equals)
-        @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2]} @tmp;
+        #Sort first by sample count, then by median sum and by the log ratio in final.
+        @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2] || $b->[1] <=> $a->[1]} @tmp;
         print STDERR "$s\t@{$tmp[0]}\t@{$tmp[1]}\t@{$tmp[2]}\n" if ($opt_y);
         $samplemode{ $s } = ($tmp[0]->[0] > 0 ? $tmp[0]->[2] / $tmp[0]->[0] : 0) + ($meddepth > 0 ? log($meddepth) / log(2) : 0); #calculate sample median
         #$samplemedian{ $s } = $stat->median( \@tmp );
@@ -287,8 +285,8 @@ sub calculateFactorAndMedianForControlSample() {
             while (my ($lr, $v) = each %mode) {
                 push(@tmp, [ $v->{ cnt }, $lr, $v->{ sum } ]);
             }
-            #Sort was changed because it produces different results based on what sum will be sort for the cnt (if cnt equals)
-            @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2]} @tmp;
+            #Sort first by sample count, then by median sum and by the log ratio in final.
+            @tmp = sort {$b->[0] <=> $a->[0] || $b->[2] <=> $a->[2] || $b->[1] <=> $a->[1]} @tmp;
             #    push( @tmp, $v->{ $s } ) unless( $loc{ $k }->{ chr } =~ /X/ || $loc{ $k }->{ chr } =~ /Y/ );
             #$factor_c{ $s } = $stat->median( \@tmp );
             print STDERR "Cntrl: $s\t@{$tmp[0]}\t@{$tmp[1]}\t@{$tmp[2]}\n" if ($opt_y);
