@@ -44,10 +44,10 @@ function diff_results {
 #---
 function test_1 {
 	echo "Test 1: Run sample1 test without control sample"
-	SAMPLE2BAM="samples/Colo_sample1_hg19_chr20_sample2bam.txt"
-	BED="bed/hg19_chr20_Colo_sample1.bed"
+	SAMPLE2BAM="$TEST_DIR/samples/Colo_sample1_hg19_chr20_sample2bam.txt"
+	BED="$TEST_DIR/bed/hg19_chr20_Colo_sample1.bed"
 	ACTUAL="$OUTPUT_DIR/test_1.seq2c_results_sample1.txt"
-	EXPECTED="expected/expected_Colo_sample1.txt"
+	EXPECTED="$TEST_DIR/expected/expected_Colo_sample1.txt"
 
 	seq2c.sh $SAMPLE2BAM $BED
 	mv $OUTPUT $ACTUAL
@@ -60,10 +60,10 @@ function test_1 {
 function test_2 {
 	echo "Test 2: Run sample1 test with control sample"
 	CONTROL_SAMPLE="Colo829.chr20.18.Sample1"
-	SAMPLE2BAM="samples/Colo_sample1_hg19_chr20_sample2bam.txt"
-	BED="bed/hg19_chr20_Colo_sample1.bed"
+	SAMPLE2BAM="$TEST_DIR/samples/Colo_sample1_hg19_chr20_sample2bam.txt"
+	BED="$TEST_DIR/bed/hg19_chr20_Colo_sample1.bed"
 	ACTUAL="$OUTPUT_DIR/test_2.seq2c_results_sample1_control.txt"
-	EXPECTED="expected/expected_Colo_sample1_control.txt"
+	EXPECTED="$TEST_DIR/expected/expected_Colo_sample1_control.txt"
 
 	seq2c.sh $SAMPLE2BAM $BED $CONTROL_SAMPLE
 	mv $OUTPUT $ACTUAL
@@ -74,12 +74,12 @@ function test_2 {
 # Test 3
 #---
 function test_3 {
-	echo "Test 3: Run GTL_16_5 test with control sample. Starts if previous small tests are ok."
+	echo "Test 3: Run GTL_16_5 test with control sample"
 	CONTROL_SAMPLE="control1:control2:control3:control4:control5:control6:"
-	SAMPLE2BAM="samples/GTL_16_5_sample2bam.txt"
-	BED="bed/panel_az600_chr7.bed"
+	SAMPLE2BAM="$TEST_DIR/samples/GTL_16_5_sample2bam.txt"
+	BED="$TEST_DIR/bed/panel_az600_chr7.bed"
 	ACTUAL="$OUTPUT_DIR/test_3.seq2c_results_GTL_16_5.txt"
-	EXPECTED="expected/expected_GTL_16_5.txt"
+	EXPECTED="$TEST_DIR/expected/expected_GTL_16_5.txt"
 
 	seq2c.sh $SAMPLE2BAM $BED $CONTROL_SAMPLE
 	mv $OUTPUT $ACTUAL
@@ -90,7 +90,6 @@ function test_3 {
 # Main: Run all tests
 #---
 
-cd "$TEST_DIR"
 mkdir "$OUTPUT_DIR" || true
 
 test_1

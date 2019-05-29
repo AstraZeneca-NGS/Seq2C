@@ -1,0 +1,7 @@
+GTL_16_5	0
+control1	0
+control2	0
+control3	0
+control4	0
+control5	0
+control6	0

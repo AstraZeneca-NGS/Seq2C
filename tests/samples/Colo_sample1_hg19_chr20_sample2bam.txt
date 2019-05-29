@@ -1,2 +1,2 @@
-Colo829.chr20.18	bam/Colo829.18.chr20.Sample1.bam
-Colo829.chr20.19	bam/Colo829.19.chr20.Sample1.bam
+Colo829.chr20.18	tests/bam/Colo829.18.chr20.Sample1.bam
+Colo829.chr20.19	tests/bam/Colo829.19.chr20.Sample1.bam
