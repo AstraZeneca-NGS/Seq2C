@@ -49,35 +49,35 @@ function diff_genes {
 	EXPECTED_TOP_GENES="$3"
 	RESULTS="$4"
 
-    # Create empty diff file
+	# Create empty diff file
 	echo "Test $TEST_NAME: Creating diff file '$DIFF_FILE'"
 	DIFF_FILE="$OUTPUT_DIR/test_$TEST_NAME.diff.txt"
 	> $DIFF_FILE
 
-    # Check if there are no bad genes in results
+	# Check if there are no bad genes in results
 	echo "Test $TEST_NAME: Compare bad genes, append differences to '$DIFF_FILE'"
-    while read BAD_GENE; do
-        if grep -P "\t$BAD_GENE\t" $RESULTS > /dev/null; then
-            echo "Bad gene presence in results: $BAD_GENE" >> $DIFF_FILE
-        fi
-    done < $EXPECTED_BAD_GENES
+	while read BAD_GENE; do
+	    if grep -P "\t$BAD_GENE\t" $RESULTS > /dev/null; then
+			echo "Bad gene presence in results: $BAD_GENE" >> $DIFF_FILE
+		fi
+	done < $EXPECTED_BAD_GENES
 
-    # Check if there are all good top genes with ratios and lengths in results
+	# Check if there are all good top genes with ratios and lengths in results
 	echo "Test $TEST_NAME: Compare top good genes, append differences to '$DIFF_FILE'"
-    while read GOOD_GENE; do
-        if grep -P "$GOOD_GENE" $RESULTS > /dev/null; then
-            continue
-        else
-            echo "Good gene absence or another results: $GOOD_GENE" >> $DIFF_FILE
-        fi
-    done < $EXPECTED_TOP_GENES
+	while read GOOD_GENE; do
+		if grep -P "$GOOD_GENE" $RESULTS > /dev/null; then
+			continue
+		else
+			echo "Good gene absence or another results: $GOOD_GENE" >> $DIFF_FILE
+		fi
+	done < $EXPECTED_TOP_GENES
 
-    if [ ! -s $DIFF_FILE ]; then
-        echo "Test $TEST_NAME: OK"
-    else
-        echo "Test $TEST_NAME: ERROR"
-        exit 1;
-    fi
+	if [ ! -s $DIFF_FILE ]; then
+		echo "Test $TEST_NAME: OK"
+	else
+		echo "Test $TEST_NAME: ERROR"
+		exit 1;
+	fi
 }
 
 #---
@@ -135,16 +135,16 @@ function test_4 {
 	echo "Test 4: Run dfj test for 2 samples 2-444961 and 2-444962"
 
 	READ_MAPPING="$TEST_DIR/coverage/seq2c-read_mapping.txt"
-    COVERAGE="$TEST_DIR/coverage/seq2c-coverage_2samples.tsv"
+	COVERAGE="$TEST_DIR/coverage/seq2c-coverage_2samples.tsv"
 
 	ACTUAL="$OUTPUT_DIR/test_4.seq2c_results_dfj_2samples.txt"
 	EXPECTED_BAD="$TEST_DIR/expected/bad_genes_2samples.txt"
 	EXPECTED_TOP="$TEST_DIR/expected/top_genes_2samples.txt"
 
 	echo "Test 4: Running cov2lr.pl script"
-    $SEQ2C_PATH/cov2lr.pl $READ_MAPPING $COVERAGE > cov2lr.results.txt
-    echo "Test 4: Running lr2gene.pl script"
-    $SEQ2C_PATH/lr2gene.pl cov2lr.results.txt > seq2c_results.txt
+	$SEQ2C_PATH/cov2lr.pl $READ_MAPPING $COVERAGE > cov2lr.results.txt
+	echo "Test 4: Running lr2gene.pl script"
+	$SEQ2C_PATH/lr2gene.pl cov2lr.results.txt > seq2c_results.txt
 
 	mv $OUTPUT $ACTUAL
 	diff_genes 4 "$EXPECTED_BAD" "$EXPECTED_TOP" "$ACTUAL"
@@ -158,16 +158,16 @@ function test_5 {
 	echo "Test 5: Run dfj test for all samples"
 
 	READ_MAPPING="$TEST_DIR/coverage/seq2c-read_mapping.txt"
-    COVERAGE="$TEST_DIR/coverage/seq2c-coverage.tsv"
+	COVERAGE="$TEST_DIR/coverage/seq2c-coverage.tsv"
 
 	ACTUAL="$OUTPUT_DIR/test_5.seq2c_results_dfj_all_samples.txt"
 	EXPECTED_BAD="$TEST_DIR/expected/bad_genes_all.txt"
 	EXPECTED_TOP="$TEST_DIR/expected/top_genes_all.txt"
 
 	echo "Test 5: Running cov2lr.pl script"
-    $SEQ2C_PATH/cov2lr.pl $READ_MAPPING $COVERAGE > cov2lr.results.txt
-    echo "Test 5: Running lr2gene.pl script"
-    $SEQ2C_PATH/lr2gene.pl cov2lr.results.txt > seq2c_results.txt
+	$SEQ2C_PATH/cov2lr.pl $READ_MAPPING $COVERAGE > cov2lr.results.txt
+	echo "Test 5: Running lr2gene.pl script"
+	$SEQ2C_PATH/lr2gene.pl cov2lr.results.txt > seq2c_results.txt
 
 	mv $OUTPUT $ACTUAL
 	diff_genes 5 "$EXPECTED_BAD" "$EXPECTED_TOP" "$ACTUAL"
