@@ -50,9 +50,9 @@ function diff_genes {
 	RESULTS="$4"
 
 	# Create empty diff file
-	echo "Test $TEST_NAME: Creating diff file '$DIFF_FILE'"
 	DIFF_FILE="$OUTPUT_DIR/test_$TEST_NAME.diff.txt"
 	> $DIFF_FILE
+	echo "Test $TEST_NAME: Creating diff file '$DIFF_FILE'"
 
 	# Check if there are no bad genes in results
 	echo "Test $TEST_NAME: Compare bad genes, append differences to '$DIFF_FILE'"
