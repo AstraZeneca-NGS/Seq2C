@@ -82,6 +82,7 @@ sub fillLocResults() {
 			$sig = "" if ( $sig == -1 );
 			$sigdiff = sprintf("%.3g", $sigdiff) if ( $sigdiff);
 			$lr = sprintf("%.3g", $lr) if ( $lr);
+            $lr = 0 if ($lr == -0);
 			if (  $sigseg && $sigseg =~ /\d/ ) {
 				my @exons = split(/,/, $sigseg);
 				my $estart = $segs[$exons[0]-1]->[3];
