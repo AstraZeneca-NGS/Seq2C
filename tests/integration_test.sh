@@ -37,6 +37,8 @@ function diff_results {
 		echo "Test $TEST_NAME: ERROR"
 		exit 1;
 	fi
+
+	test_zeros $TEST_NAME $RESULTS
 }
 
 #---
@@ -56,8 +58,11 @@ function diff_genes {
 
 	# Check if there are no bad genes in results
 	echo "Test $TEST_NAME: Compare bad genes, append differences to '$DIFF_FILE'"
+	RESULTS_GENES="$OUTPUT_DIR/test_$TEST_NAME.genes.txt"
+	# AWK to get list of unique genes from results and decrease time
+	awk 'unique[$2]++ {print $2;}' $RESULTS > $RESULTS_GENES
 	while read BAD_GENE; do
-	    if grep -P "\t$BAD_GENE\t" $RESULTS > /dev/null; then
+	    if grep -P "$BAD_GENE\n" $RESULTS_GENES > /dev/null; then
 			echo "Bad gene presence in results: $BAD_GENE" >> $DIFF_FILE
 		fi
 	done < $EXPECTED_BAD_GENES
@@ -78,6 +83,21 @@ function diff_genes {
 		echo "Test $TEST_NAME: ERROR"
 		exit 1;
 	fi
+
+	test_zeros $TEST_NAME $RESULTS
+}
+
+#---
+# Check for zeros (there must be only "0" and no "-0" in the output)
+# Arguments: test_name actual_results
+#---
+function test_zeros {
+    TEST_NAME="$1"
+    RESULTS="$2"
+	if grep -P "\t-0\t" $RESULTS > /dev/null; then
+	    echo "Test $TEST_NAME: ERROR: result has -0 values"
+		exit 1;
+    fi
 }
 
 #---
@@ -174,6 +194,24 @@ function test_5 {
 }
 
 #---
+# Test 6 (Test for exons with the same start coordinates).
+# The end of sigseg must contain the end coordinate from the last exon in a list of segments:
+# in this case end is 154115315 for chrX F8A1 gene.
+#---
+function test_6 {
+	echo "Test 6: Run HG00306 sample for the case with the same exon starts in chrX F8A1"
+
+	SAMPLE2BAM="$TEST_DIR/samples/HG00306_exon_starts.txt"
+	BED="$TEST_DIR/bed/hs37d5_gender_exon_order.bed"
+	ACTUAL="$OUTPUT_DIR/test_6.seq2c_results_HG00306_exons.txt"
+	EXPECTED="$TEST_DIR/expected/expected_HG00306_exons.txt"
+
+	$SEQ2C_PATH/seq2c.sh $SAMPLE2BAM $BED
+	mv $OUTPUT $ACTUAL
+	diff_results 6 "$EXPECTED" "$ACTUAL"
+}
+
+#---
 # Main: Run all tests
 #---
 mkdir "$OUTPUT_DIR" || true
@@ -183,4 +221,5 @@ test_2
 test_3
 test_4
 test_5
+test_6
 

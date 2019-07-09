@@ -1,0 +1,4 @@
+Sample	Gene	Chr	Start	End	Length	Log2ratio	Sig	BP_Whole	Amp_Del	Ab_Seg	Total_Seg	Ab_log2ratio	Log2r_Diff	Ab_Seg_Loc	Ab_Samples	Ab_Samples_Pcnt
+HG00306	F8A1	chrX	154114697	154115765	1083	-1	9.98e-10	BP	Del	3	7	-9.09	8.09	3,4,5(154115050-154115315)	1	1
+HG00306	KANK1	chr9	676972	745235	4225	0					24					
+HG00306	DAZ3	chrY	26915080	26959332	324	-9.09	0	Whole	Del	6	6	-9.09	-9.09	ALL		

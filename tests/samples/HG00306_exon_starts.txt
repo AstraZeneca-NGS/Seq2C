@@ -1,0 +1,1 @@
+HG00306	tests/bam/HG00306.exon_starts.bam
