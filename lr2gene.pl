@@ -74,7 +74,7 @@ sub fillLocResults() {
 
 	while(my ($s, $v) = each %g2amp) {
 		while(my ($g, $vv) = each %$v) {
-			my @segs = sort { $a->[3] <=> $b->[3] } @$vv; # sort by gene start
+			my @segs = sort { $a->[3] <=> $b->[3] || $a->[4] <=> $b->[4] } @$vv; # sort by gene start
 			#print STDERR "@segs[0] @segs[1] @segs[2] @segs[3]\n";
 			my @lr = map { $opt_c ? $_->[6] : $_->[5]; } @segs; # if opt_c, take normalized depth median by control sample (log2 ratio)
 			my $lr = @lr > 1 ? $stat->median(\@lr) : $lr[0];
@@ -82,6 +82,7 @@ sub fillLocResults() {
 			$sig = "" if ( $sig == -1 );
 			$sigdiff = sprintf("%.3g", $sigdiff) if ( $sigdiff);
 			$lr = sprintf("%.3g", $lr) if ( $lr);
+            $lr = 0 if ($lr == -0);
 			if (  $sigseg && $sigseg =~ /\d/ ) {
 				my @exons = split(/,/, $sigseg);
 				my $estart = $segs[$exons[0]-1]->[3];
