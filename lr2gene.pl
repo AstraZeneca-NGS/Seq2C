@@ -11,6 +11,7 @@ use Getopt::Std;
 use strict;
 
 our ($opt_c, $opt_s, $opt_A, $opt_D, $opt_M, $opt_d, $opt_p, $opt_H, $opt_R, $opt_N, $opt_t, $opt_P, $opt_y, $opt_E, $opt_e);
+our $VERSION = '1.4.0';
 
 getopts( 'HcyF:s:A:D:d:M:p:R:N:t:P:E:e:' ) || USAGE();
 $opt_H && USAGE();
@@ -375,7 +376,7 @@ sub USAGE {
 	getopts( 'aPc:F:s:A:D:' );
 	print <<USAGE;
     Usage: $0 [-aPH] [-cy] [-F float] [-s min_amplicon_#] [-A float] [-D float] cov2lr.txt
-
+    Version: $VERSION
     The $0 program will convert a coverage file to copy number profile.  The default parameters are designed for
     detecting such aberrations for high tumor purity samples, such as cancer cell lines.  For clinical samples,
     many parameters need to be adjusted.

@@ -7,6 +7,8 @@ use Getopt::Std;
 use strict;
 
 our ($opt_h, $opt_b, $opt_s, $opt_c, $opt_S, $opt_E, $opt_n, $opt_e, $opt_g, $opt_x, $opt_z, $opt_N, $opt_a);
+our $VERSION = '1.4.0';
+
 USAGE() unless( getopts( 'hzb:s:e:S:E:n:c:g:x:N:a:' ) );
 USAGE() if ( $opt_h );
 
@@ -147,7 +149,7 @@ while( my ($gene, $r) = each %regions ) {
 sub USAGE {
     print STDERR <<USAGE;
     $0 [-hz] [-n name_reg] [-b bam] [-c chr] [-S start] [-E end] [-s seg_starts] [-e seg_ends] [-x #_nu] [-g gene] [-o ori] [-d depth] region_info
-
+    Version: $VERSION
     The program will calculate candidate variance for a given region(s) in an indexed BAM file.  The default
     input is IGV's one or more entries in refGene.txt, but can be regions
 

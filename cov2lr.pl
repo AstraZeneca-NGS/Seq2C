@@ -10,6 +10,7 @@ use Stat::Basic;
 use Getopt::Std;
 use strict;
 our ($opt_c, $opt_a, $opt_H, $opt_F, $opt_G, $opt_Y, $opt_M, $opt_y, $opt_Z, $opt_z); #TODO: opt_z is not used, maybe delete it?
+our $VERSION = '1.4.0';
 
 getopts( 'HaMyZc:F:G:z:' ) || USAGE();
 $opt_H && USAGE();
@@ -372,7 +373,7 @@ sub printResults() {
 sub USAGE {
 print <<USAGE;
     Usage: $0 [-aH] [-c control] mapping_reads coverage.txt
-
+    Version: $VERSION
     The $0 program will convert a coverage file to copy number profile.
 
     Arguments are:
