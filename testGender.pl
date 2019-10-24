@@ -1,11 +1,15 @@
 #!/usr/bin/env perl
 # Generates gender data file. Can be used in cov2lr.pl with -G option to provide gender data for samples
+use FindBin;
+use lib "$FindBin::RealBin/libraries/";
 use Stat::Basic;
 use Statistics::TTest;
 use Getopt::Std;
 use strict;
 
 our ($opt_B, $opt_d, $opt_H, $opt_x, $opt_L, $opt_b, $opt_N, $opt_n, $opt_y, $opt_h);
+our $VERSION = '1.4.0';
+
 getopts('hHyB:d:x:L:b:N:n:') || USAGE();
 $opt_H && USAGE();
 
@@ -122,7 +126,7 @@ sub USAGE {
     print <<USAGE;
 USAGE:
     $0 [-hHy] [-B gender_BED] [-d dir] [-x cov] [-L len] [-b bam] [-n regex] [-N name] sample2bam.txt
-
+    Version: $VERSION
     The program will calculate the chrY coverage and make prediction of genders.  The BAM file need to be
     targeted with chrY genes, exome or WGS.  Otherwise, it might make wrong prediction.
 
