@@ -72,8 +72,8 @@ Output result (`seq2c_results.txt` file) contains columns:
 13. **Ab_log2ratio** - log2 ratio of normalized median depth by sample
 14. **Log2r_Diff** - difference between CNV log2 ratio
 15. **Ab_Seg_Loc** - segment location: ALL if AMP or DEL, else empty
-16. **Ab_Samples** - control samples
-17. **Ab_Samples_Pcnt** - control samples percent
+16. **Ab_Samples** - abberation samples count for segments. Output only for BP calls that are “good”, i.e. wasn’t filtered by thresholds.
+17. **Ab_Samples_Pcnt** - abberation samples fraction from total number of samples.
 
 ## Command line options for scripts
 You can run scripts separately if you want transfer additional command (for example, gender files or tumor purities).
