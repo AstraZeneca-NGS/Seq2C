@@ -237,6 +237,8 @@ Arguments are:
     The output file from seq2c.sh script (or lr2gene.pl).  Can also take from standard in or more than one file.
 
 Options:
+-   `-k`  
+    Print header
 -   `-g`  
     Whether to output copy gains [4-5] copies.  Default: no.
 -   `-p file`  
@@ -266,6 +268,30 @@ For gains:
 -   `-G Genes`  
    List of genes, seperated by ":", for which gain will be captured.  Default: MYC
 
+Output:  
+Some columns are filled with blanks, "NA" or "-" for compatibility with OncoPrint format.
+1. Sample 
+2. Always ""
+3. Variant_type: always "copy_number_alteration"
+4. Gene 
+5. Always "NA"
+6. Always "-"
+7. Always "-"
+8. Segment "chr:start"
+9. Always "-"
+10. Always "-"
+11. Transf_LogRatio: transformed log_ratio as (2^LogRatio)*2 
+12. Segments: for BP - affected segments of total segments, for Whole - both numbers are total segments.  
+13. LogRatio 
+14. Alteration in format "amplification/gain/loss"  
+15. Always "-" 
+16. Always "-" 
+17. Always "-" 
+18. Always "-" 
+19. Always "-" 
+20. Always "-" 
+21. Always "-" 
+22. Alteration in format "Amplification/Gain/Deletion"
 
 ### testGender.pl
 The program will calculate the chrY coverage and make prediction of genders.  The BAM file need to be

@@ -3,9 +3,9 @@
 use Getopt::Std;
 use strict;
 
-our ($opt_n, $opt_d, $opt_a, $opt_e, $opt_A, $opt_D, $opt_N, $opt_p, $opt_g, $opt_P, $opt_H, $opt_G);
+our ($opt_n, $opt_d, $opt_a, $opt_e, $opt_A, $opt_D, $opt_N, $opt_p, $opt_g, $opt_P, $opt_H, $opt_G, $opt_k);
 
-getopts('Hgn:d:a:e:D:A:N:p:G:P:') || USAGE();
+getopts('Hkgn:d:a:e:D:A:N:p:G:P:') || USAGE();
 $opt_H && USAGE();
 
 my %purity;
@@ -25,6 +25,10 @@ my %GAIN = map { ($_, 1); } @GAIN;
 
 my %count;
 my %samples;
+if ( $opt_k ) {
+    print join("\t", qw(Sample Empty Variant_Type Gene NA - - Segment - - Transf_LogRatio Segments LogRatio alteration - - - - - - - Alteration));
+    print "\n";
+}
 while( <> ) {
     my @a = split(/\t/);
     my $gene = $a[1];
@@ -54,11 +58,11 @@ while( <> ) {
 	}
     }
     if ( $a[10] && $a[8] eq "BP" && ($a[10] >= $MINEXON || $a[11] - $a[10] >= $MINEXON) ) {
-	$lr = $a[12];
+	    $lr = $a[12];
         next unless( $lr >= $SMINEXONAMP || $lr <= $SMINEXONDEL );
     }
     next unless( $lr >= $SMINAMP || $lr <= $SMINDEL );
-    my $type = $lr < $SMINDEL ? "Deletion" : "Amplification";
+    my $type = $lr <= $SMINDEL ? "Deletion" : "Amplification";  # Fixed bug when logR=-2.00
     next if ( $a[15] && $a[15] >= $N );
     print join("\t", $sample, "", "copy-number-alteration", $a[1], "NA", "-", "-", "$a[2]:$a[3]", "-", "-", sprintf("%.1f", 2**$lr*2), $desc, $lr, $type eq "Deletion" ? "loss" : "amplification", "-", "-", "-", "-", "-", "-", "-", $type), "\n";
 }
@@ -78,13 +82,15 @@ sub setPurity {
 
 sub USAGE {
     print STDERR<<USAGE;
-    $0 [-g] [-e exons] [-n reg] [-N num] [-A amp] [-a amp] [-D del] [-d del] [-p purity_file] [-P purity] lr2gene_output
+    $0 [-k] [-g] [-e exons] [-n reg] [-N num] [-A amp] [-a amp] [-D del] [-d del] [-p purity_file] [-P purity] lr2gene_output
 
     The program will parse seq2c output and make calls for each gene and output in the format compatible with OncoPrint.
     It has the option to provide the purity so that log2ratio thresholds will be adjusted accordingly.  By default, it calls
     genes that are homozygously deleted or amplified with >= 6 copies.
 
     Options:
+    -k Print header
+
     -g Whether to output copy gains [4-5] copies.  Default: no.
 
     -p file
