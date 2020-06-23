@@ -5,7 +5,7 @@ use strict;
 
 our ($opt_n, $opt_d, $opt_a, $opt_e, $opt_A, $opt_D, $opt_N, $opt_p, $opt_g, $opt_P, $opt_H, $opt_G);
 
-getopts('Hgn:d:a:e:D:A:N:p:G:') || USAGE();
+getopts('Hgn:d:a:e:D:A:N:p:G:P:') || USAGE();
 $opt_H && USAGE();
 
 my %purity;
