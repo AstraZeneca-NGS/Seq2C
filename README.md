@@ -268,7 +268,8 @@ For gains:
 -   `-G Genes`  
    List of genes, seperated by ":", for which gain will be captured.  Default: MYC
 
-Output result:
+Output:  
+Some columns are filled with blanks, "NA" or "-" for compatibility with OncoPrint format.
 1. Sample 
 2. Always ""
 3. Variant_type: always "copy_number_alteration"
