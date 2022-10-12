@@ -2,7 +2,7 @@ import argparse
 from argparse import HelpFormatter
 import logging
 import re
-from math import log
+from math import log2
 
 
 def set_purity(file: str) -> dict:
@@ -59,7 +59,7 @@ def seq2c2fm(args) -> str:
 
     MINDEL = args.min_del
     MINAMP = args.min_amp  # 6 copies for pure sample
-    MINEXONDEL = args.min_exon_del  # -2.0 or -2.5???
+    MINEXONDEL = args.min_exon_del
     MINEXONAMP = args.min_exon_amp
     MINEXON = args.min_exon
     N = args.num  # If a breakpoint is called more than N samples, then it's deemed a false positive and filtered
@@ -98,11 +98,11 @@ def seq2c2fm(args) -> str:
                 continue
 
             if args.purity_file or args.purity_percent:
-                copy = (2.0 ** lr - 1 + pur) * 2.0 / pur;  # For absolute copy ???
+                copy = (2.0 ** lr - 1 + pur) * 2.0 / pur;  # For tumor absolute cooy: lr = log2((N*p+2*(1-p))/2)
             if copy <= 0:  # to capture the cases where lr will be really small for homozygous deletions
                 lr = -10
             else:
-                lr = log(copy / 2) / log(2)
+                lr = log2(copy) - 1
 
             desc = f"{a[10]} of {a[11]}" if a[8] == "BP" else f"{a[11]} of {a[11]}"
             if args.output_gain or gene in genes_gain:  # Only do whole gene for copy gains
