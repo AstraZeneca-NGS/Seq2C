@@ -1,9 +1,7 @@
 import argparse
 from argparse import HelpFormatter
-import logging
 import re
 from math import log2
-
 
 def set_purity(file: str) -> dict:
     """
@@ -63,19 +61,21 @@ def seq2c2fm(args) -> str:
     MINEXONAMP = args.min_exon_amp
     MINEXON = args.min_exon
     N = args.num  # If a breakpoint is called more than N samples, then it's deemed a false positive and filtered
-    genes_gain = args.genes.split(':')
+    genes_gain = args.genes_gain.split(':')
     MAD = args.mad
 
     cols = ['Sample', 'Empty', 'Variant_Type', 'Gene', 'NA', '-', '-', 'Segment', '-', '-', 'Transf_LogRatio',
             'Segments', 'LogRatio', 'alteration', '-', '-', '-', '-', '-', '-', '-', 'Alteration']
-    output = ('\t'.join(cols) if args.print_header else '') + '\n'
+    output = '\t'.join(cols) + '\n' if args.print_header else ''
 
-    count = {}
     samples = {}
     with open(args.in_file, 'r') as f:
         for line in f:
-            a = line.strip().split('\t')
+            a = line.replace('\n', '').split('\t')
             sample, gene = a[0], a[1]
+            if sample == 'Sample':  # skip header
+                continue
+
             if args.reg:
                 m = re.search(args.reg, sample)
                 if m is not None:
@@ -138,7 +138,7 @@ def seq2c2fm(args) -> str:
                 if not (lr >= SMINAMP or lr <= SMINDEL):
                     continue
 
-            if int(a[15]) >= args.num:
+            if int(a[15]) >= N:
                 continue
 
             if _type == "Duplication":
