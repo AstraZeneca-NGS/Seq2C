@@ -70,6 +70,7 @@ def seq2c2fm(args) -> str:
 
     samples = {}
     with open(args.in_file, 'r') as f:
+        next(f)
         for line in f:
             a = line.replace('\n', '').split('\t')
             sample, gene = a[0], a[1]
@@ -107,8 +108,8 @@ def seq2c2fm(args) -> str:
             desc = f"{a[10]} of {a[11]}" if a[8] == "BP" else f"{a[11]} of {a[11]}"
             if args.output_gain or gene in genes_gain:  # Only do whole gene for copy gains
                 if lr >= 0.75 and lr < SMINAMP:
-                    vals = [sample, "", "copy-number-alteration", a[1], "NA", "-", "-", "$a[2]:$a[3]", "-", "-",
-                            f"{2 ** lr * 2:.1f}", desc, str(lr), "gain", "-", "-", "-", "-", "-", "-", "-", "Gain"]
+                    vals = [sample, "", "copy-number-alteration", a[1], "NA", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
+                            f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'), "gain", "-", "-", "-", "-", "-", "-", "-", "Gain"]
                     output += "\t".join(vals) + "\n"
                     continue
 
@@ -138,15 +139,15 @@ def seq2c2fm(args) -> str:
                 if not (lr >= SMINAMP or lr <= SMINDEL):
                     continue
 
-            if int(a[15]) >= N:
+            if a[15] and int(a[15]) >= N:
                 continue
 
             if _type == "Duplication":
                 vals = [sample, "", "rearrangement", a[1], "likely", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
-                        f"{2 ** lr * 2:.1f}", desc, str(lr), "-", a[1], a[1], desc, "-", "-", "-", "-", "Rearrangement"]
+                        f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'), "-", a[1], a[1], desc, "-", "-", "-", "-", "Rearrangement"]
             else:
                 vals = [sample, "", "copy-number-alteration", a[1], "NA", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
-                        f"{2 ** lr * 2:.1f}", desc, str(lr),
+                        f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'),
                         "loss" if _type == "Deletion" else "amplification", "-", "-", "-", "-", "-", "-", "-", _type]
             output += "\t".join(vals) + "\n"
 
