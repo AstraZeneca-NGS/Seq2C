@@ -1,7 +1,7 @@
 import argparse
 from argparse import HelpFormatter
 import re
-fifrom math import log
+from math import log
 
 def set_purity(file: str) -> dict:
     """
