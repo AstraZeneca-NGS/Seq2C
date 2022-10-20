@@ -1,7 +1,7 @@
 import argparse
 from argparse import HelpFormatter
 import re
-from math import log2
+fifrom math import log
 
 def set_purity(file: str) -> dict:
     """
@@ -70,7 +70,6 @@ def seq2c2fm(args) -> str:
 
     samples = {}
     with open(args.in_file, 'r') as f:
-        next(f)
         for line in f:
             a = line.replace('\n', '').split('\t')
             sample, gene = a[0], a[1]
@@ -103,7 +102,7 @@ def seq2c2fm(args) -> str:
             if copy <= 0:  # to capture the cases where lr will be really small for homozygous deletions
                 lr = -10
             else:
-                lr = log2(copy) - 1
+                lr = log(copy/2)/log(2)
 
             desc = f"{a[10]} of {a[11]}" if a[8] == "BP" else f"{a[11]} of {a[11]}"
             if args.output_gain or gene in genes_gain:  # Only do whole gene for copy gains
