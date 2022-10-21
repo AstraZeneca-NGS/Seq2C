@@ -91,7 +91,8 @@ def seq2c2fm(args) -> str:
             elif args.purity_percent:
                 pur = args.purity_percent / 100.0 if args.purity_percent > 1 else args.purity_percent
 
-            lr = float(a[6])
+            lr_str = a[6]
+            lr = float(lr_str)
 
             # If MAD is available, CNV will only be called if the values exceed the background
             if sample in mad and abs(lr) <= MAD * mad[sample]:
@@ -99,23 +100,25 @@ def seq2c2fm(args) -> str:
 
             if args.purity_file or args.purity_percent:
                 copy = (2.0 ** lr - 1 + pur) * 2.0 / pur;  # For tumor absolute cooy: lr = log2((N*p+2*(1-p))/2)
-            if copy <= 0:  # to capture the cases where lr will be really small for homozygous deletions
-                lr = -10
-            else:
-                lr = log(copy/2)/log(2)
+                if copy <= 0:  # to capture the cases where lr will be really small for homozygous deletions
+                    lr = -10
+                    lr_str = str(lr)
+                else:
+                    lr = log(copy/2)/log(2)
 
             desc = f"{a[10]} of {a[11]}" if a[8] == "BP" else f"{a[11]} of {a[11]}"
             if args.output_gain or gene in genes_gain:  # Only do whole gene for copy gains
                 if lr >= 0.75 and lr < SMINAMP:
                     vals = [sample, "", "copy-number-alteration", a[1], "NA", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
-                            f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'), "gain", "-", "-", "-", "-", "-", "-", "-", "Gain"]
+                            f"{2 ** lr * 2:.1f}", desc, lr_str, "gain", "-", "-", "-", "-", "-", "-", "-", "Gain"]
                     output += "\t".join(vals) + "\n"
                     continue
 
             _type = "Deletion" if lr < SMINDEL else "Amplification"
 
             if a[10] and a[8] == "BP" and (float(a[10]) >= MINEXON or (float(a[11]) - float(a[10])) >= MINEXON):
-                lr = float(a[12])
+                lr_str = a[12]
+                lr = float(lr_str)
                 seg = ''
                 m = re.match(r"(\S+)\(", a[14])
                 if m is not None:
@@ -130,7 +133,8 @@ def seq2c2fm(args) -> str:
                 elif a[9] == "Dup":
                     _type = "Duplication"
                     desc = f"Dup seg {seg}"
-                    lr = float(a[13])  # use the difference instead of absolute log2 ratio for duplications
+                    lr_str = a[13]
+                    lr = float(lr_str)  # use the difference instead of absolute log2 ratio for duplications
 
                 if not (lr >= SMINEXONAMP or lr <= SMINEXONDEL):
                     continue
@@ -143,10 +147,10 @@ def seq2c2fm(args) -> str:
 
             if _type == "Duplication":
                 vals = [sample, "", "rearrangement", a[1], "likely", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
-                        f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'), "-", a[1], a[1], desc, "-", "-", "-", "-", "Rearrangement"]
+                        f"{2 ** lr * 2:.1f}", desc, lr_str, "-", a[1], a[1], desc, "-", "-", "-", "-", "Rearrangement"]
             else:
                 vals = [sample, "", "copy-number-alteration", a[1], "NA", "-", "-", f"{a[2]}:{a[3]}", "-", "-",
-                        f"{2 ** lr * 2:.1f}", desc, f"{lr:.2f}".rstrip('0'),
+                        f"{2 ** lr * 2:.1f}", desc, lr_str,
                         "loss" if _type == "Deletion" else "amplification", "-", "-", "-", "-", "-", "-", "-", _type]
             output += "\t".join(vals) + "\n"
 
@@ -159,10 +163,10 @@ def main():
                                      epilog=f'''This program will parse seq2c output and make calls for each gene and output in the format compatible with OncoPrint\nUsage: {usage}''',
                                      formatter_class=HelpFormatter)  # argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-k', '--print_header', action='store_true', help='Print header')
-    parser.add_argument('-g', '--output_gain', action='store_true', help='Whether to output copy gains [4-5] copies')
+    parser.add_argument('-g', '--output_gain', action='store_true', default=False, help='Whether to output copy gains [4-5] copies')
     parser.add_argument('-p', '--purity_file', type=str,
                         help='A file that contains the tumor purity for all samples. Two columns, first is sample name, second is the purity in %% or fraction [0-1]')
-    parser.add_argument('-P', '--purity_percent', type=float, default=1.0,
+    parser.add_argument('-P', '--purity_percent', type=float,
                         help='The purity. Default: 1 or 100%%, as is for cell lines. If set, all samples will assume to have the same purity')
     parser.add_argument('-n', '--reg', default=None,
                         help='The regular expression to extract sample names. Default: none')
